@@ -49,6 +49,7 @@
 		'Environment.Update',
 		'ManagedIdentity.CreateIfNotExist',
 		'ManagedIdentity.DeleteIfExist',
+		'Role.GetIdByName',
 		'SystemUser.AssociateRoles',
 		'SystemUser.CreateIfNotExist',
 		'SystemUser.DeleteIfExist'

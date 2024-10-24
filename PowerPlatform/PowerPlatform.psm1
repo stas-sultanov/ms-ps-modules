@@ -469,6 +469,67 @@ function ManagedIdentity.DeleteIfExist
 	}
 }
 
+<# ######################### #>
+<# Functions to manage Roles #>
+<# ######################### #>
+
+function Role.GetIdByName
+{
+	<#
+	.SYNOPSIS
+		Get Id of the Role by Name.
+	.DESCRIPTION
+		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/role
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER apiVersion
+		Version of the Power Platform API to use.
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER name
+		Name of the role.
+	.OUTPUTS
+		Id of the Role if it is found, null otherwise.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	[OutputType([Guid])]
+	param
+	(
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $name
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create web request uri
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/roles?`$select=roleid&`$filter=name eq '$($name)'";
+
+		# invoke web request to look for the Role
+		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $isVerbose;
+
+		# convert response content
+		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
+
+		if ($responseContent.value.Count -eq 0)
+		{
+			return $null;
+		}
+
+		# get result
+		$result = [Guid] $responseContent.value[0].roleid;
+
+		return $result;
+	}
+}
+
 <# ################################ #>
 <# Functions to manage System Users #>
 <# ################################ #>
