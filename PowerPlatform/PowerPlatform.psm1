@@ -55,7 +55,7 @@ function BusinessUnit.GetRootId
 		# create web request uri
 		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/businessunits?%24select=businessunitid&%24filter=_parentbusinessunitid_value%20eq%20null";
 
-		# invoke web request to get root business unit
+		# invoke web request
 		$response = InvokeWebRequest -accessToken $accessToken -method Get -Uri $uri -verbose $isVerbose;
 
 		# convert response content
@@ -111,7 +111,7 @@ function Environment.Create
 		# create web request uri
 		$uri = [Uri] "$($EnvironmentApiUri)/environments?api-version=$($apiVersion)&retainOnProvisionFailure=false";
 
-		# invoke web request to create environment and get to completion
+		# invoke web request
 		$response = InvokeWebRequestAndGetComplete -accessToken $accessToken -body $settings -method Post -uri $uri -verbose $isVerbose;
 
 		# get environment name
@@ -219,7 +219,7 @@ function Environment.Retrieve
 		# create web request uri
 		$uri = [Uri] "$($EnvironmentApiUri)/scopes/admin/environments/$($name)?api-version=$($apiVersion)&$($EnvironmentSelect)";
 
-		# invoke web request to get environment info
+		# invoke web request
 		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $isVerbose;
 
 		# convert config response content
@@ -269,7 +269,7 @@ function Environment.RetrieveAll
 		# create web request uri
 		$uri = [Uri] "$($EnvironmentApiUri)/scopes/admin/environments?api-version=$($apiVersion)&$($EnvironmentSelect)";
 
-		# invoke web request to get all accessible environments | OData $filter does not work :(
+		# invoke web request | OData $filter does not work :(
 		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $isVerbose;
 
 		# convert content
@@ -327,7 +327,7 @@ function Environment.Update
 		# create web request uri
 		$uri = [Uri] "$($EnvironmentApiUri)/scopes/admin/environments/$($name)?api-version=$($apiVersion)";
 		
-		# invoke web request to update the environment and get to completion
+		# invoke web request
 		$null = InvokeWebRequestAndGetComplete -accessToken $accessToken -body $settings -uri $uri -method Patch -verbose $isVerbose;
 
 		# retrieve environment info
@@ -403,7 +403,7 @@ function ManagedIdentity.CreateIfNotExist
 		# create web request uri
 		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/managedidentities";
 
-		# invoke web request to create managed identity and get to completion
+		# invoke web request
 		$response = InvokeWebRequestAndGetComplete -accessToken $accessToken -body $body -method Post -uri $uri -verbose $isVerbose;
 
 		# convert response content
@@ -463,7 +463,7 @@ function ManagedIdentity.DeleteIfExist
 		# create web request uri
 		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/managedidentities($($id))";
 
-		# invoke web request to delete managed identity
+		# invoke web request
 		$null = InvokeWebRequest -accessToken $accessToken -method Delete -uri $uri -verbose $isVerbose;
 
 		return $true;
@@ -513,7 +513,7 @@ function Role.GetIdByName
 		# create web request uri
 		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/roles?`$select=roleid&`$filter=name eq '$($name)'";
 
-		# invoke web request to look for the Role
+		# invoke web request
 		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $isVerbose;
 
 		# convert response content
@@ -583,16 +583,16 @@ function Solution.Export
 			SolutionName = $name
 		};
 
-		# invoke web request to associate role
+		# invoke web request
 		$response = InvokeWebRequest -accessToken $accessToken -body $requestBody -method Post -uri $uri -verbose $isVerbose;
 
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
 
-		# convert file convert from base64 to byte array
+		# convert file from base64 string to byte array
 		$fileAsByteArray = [Convert]::FromBase64String($responseContent.ExportSolutionFile);
 
-		# write to local file
+		# write byte array to file
 		[File]::WriteAllBytes($outputFile, $fileAsByteArray);
 	}
 }
@@ -648,7 +648,7 @@ function SystemUser.AssociateRoles
 				'@odata.id' = "$($environmentUrl)api/data/$($apiVersion)/roles($($roleId))"
 			};
 
-			# invoke web request to associate role
+			# invoke web request
 			$null = InvokeWebRequest -accessToken $accessToken -body $requestBody -method Post -uri $uri -verbose $isVerbose;
 		}
 	}
@@ -717,7 +717,7 @@ function SystemUser.CreateIfNotExist
 			systemuserid                = $id
 		};
 
-		# invoke web request to create system user and get to completion
+		# invoke web request
 		$response = InvokeWebRequestAndGetComplete -accessToken $accessToken -body $requestBody -method Post -uri $uri -verbose $isVerbose;
 
 		# convert response content
@@ -811,7 +811,7 @@ function ManagedIdentity.Exist
 		# create web request uri
 		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/managedidentities?`$select=managedidentityid&`$filter=managedidentityid eq '$($id)'";
 
-		# invoke web request to check if managed identity exist
+		# invoke web request
 		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $verbose;
 
 		# convert response content
@@ -842,7 +842,7 @@ function SystemUser.Exist
 		# create web request uri
 		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers?`$select=systemuserid&`$filter=systemuserid eq '$($id)'";
 
-		# invoke web request to check if system user exist
+		# invoke web request
 		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $verbose;
 
 		# convert response content
