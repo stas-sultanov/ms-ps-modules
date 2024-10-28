@@ -1,5 +1,6 @@
 using namespace System;
 using namespace System.Collections.Generic;
+using namespace System.IO;
 using namespace Microsoft.PowerShell.Commands;
 
 <# ##### #>
@@ -530,6 +531,72 @@ function Role.GetIdByName
 	}
 }
 
+<# ############################# #>
+<# Functions to manage Solutions #>
+<# ############################# #>
+
+function Solution.Export
+{
+	<#
+	.SYNOPSIS
+		Export a Solution.
+	.DESCRIPTION
+		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/exportsolutionresponse
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER apiVersion
+		Version of the Power Platform API to use.
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER managed
+		True if solution should be exported as managed, False otherwise.
+	.PARAMETER name
+		Name of the solution to export.
+	.PARAMETER outputFile
+		File to write output.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	param
+	(
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Boolean]      $managed,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $name,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $outputFile
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create web request uri
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/ExportSolution";
+
+		# create web request body
+		$requestBody = @{
+			Managed      = $managed
+			SolutionName = $name
+		};
+
+		# invoke web request to associate role
+		$response = InvokeWebRequest -accessToken $accessToken -body $requestBody -method Post -uri $uri -verbose $isVerbose;
+
+		# convert response content
+		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
+
+		# convert file convert from base64 to byte array
+		$fileAsByteArray = [Convert]::FromBase64String($responseContent.ExportSolutionFile);
+
+		# write to local file
+		[File]::WriteAllBytes($outputFile, $fileAsByteArray);
+	}
+}
+
 <# ################################ #>
 <# Functions to manage System Users #>
 <# ################################ #>
@@ -577,9 +644,9 @@ function SystemUser.AssociateRoles
 			$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers($($id))%2Fsystemuserroles_association%2F%24ref";
 
 			# create web request body
-			$requestBody = [PSCustomObject]@{
+			$requestBody = @{
 				'@odata.id' = "$($environmentUrl)api/data/$($apiVersion)/roles($($roleId))"
-			} | ConvertTo-Json -Compress;
+			};
 
 			# invoke web request to associate role
 			$null = InvokeWebRequest -accessToken $accessToken -body $requestBody -method Post -uri $uri -verbose $isVerbose;
@@ -790,32 +857,6 @@ function SystemUser.Exist
 	}
 }
 
-function InvokeWebRequest
-{
-	[OutputType([WebResponseObject])]
-	param
-	(
-		[SecureString]     $accessToken,
-		[Object]           $body = $null,
-		[WebRequestMethod] $method,
-		[Uri]              $uri,
-		[Boolean]          $verbose
-	)
-	process
-	{
-		if ($null -eq $body)
-		{
-			# invoke web request
-			return Invoke-WebRequest -Authentication Bearer -Method $method -Token $accessToken -Uri $uri -Verbose:$verbose;
-		}
-
-		$requestBody = $body | ConvertTo-Json -Compress -Depth 100;
-
-		# invoke web request
-		return Invoke-WebRequest -Authentication Bearer -Body $requestBody -ContentType 'application/json' -Method $method -Token $accessToken -Uri $uri -Verbose:$verbose;
-	}
-}
-
 function InvokeWebRequestAndGetComplete
 {
 	[OutputType([WebResponseObject])]
@@ -859,5 +900,49 @@ function InvokeWebRequestAndGetComplete
 
 		# return response
 		return $response;
+	}
+}
+
+function InvokeWebRequest
+{
+	[OutputType([WebResponseObject])]
+	param
+	(
+		[SecureString]     $accessToken,
+		[Object]           $body = $null,
+		[WebRequestMethod] $method,
+		[Uri]              $uri,
+		[Boolean]          $verbose
+	)
+	process
+	{
+		try
+		{
+			if ($null -eq $body)
+			{
+				# invoke web request
+				return Invoke-WebRequest -Authentication Bearer -Method $method -Token $accessToken -Uri $uri -Verbose:$verbose;
+			}
+
+			$requestBody = $body | ConvertTo-Json -Compress -Depth 100;
+
+			# invoke web request
+			return Invoke-WebRequest -Authentication Bearer -Body $requestBody -ContentType 'application/json' -Method $method -Token $accessToken -Uri $uri -Verbose:$verbose;
+		}
+		catch [Microsoft.PowerShell.Commands.HttpResponseException]
+		{
+			Write-Host 'An error occurred calling the Power Platform:' -ForegroundColor Red;
+
+			Write-Host "StatusCode: $($_.Exception.StatusCode) ($($_.Exception.StatusCode))";
+
+			# Replaces escaped characters in the JSON
+			[Regex]::Replace($_.ErrorDetails.Message, '\\[Uu]([0-9A-Fa-f]{4})', { [char]::ToString([Convert]::ToInt32($args[0].Groups[1].Value, 16)) } )
+		}
+		catch
+		{
+			Write-Host 'An error occurred in the script:' -ForegroundColor Red;
+
+			Write-Host $_;
+		}
 	}
 }

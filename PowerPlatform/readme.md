@@ -27,6 +27,8 @@ The following functions are implemented.
 | ManagedIdentities | ManagedIdentity.CreateIfNotExist   | Create a Managed Identity within the Power Platform Environment.
 | ManagedIdentities | ManagedIdentity.DeleteIfExist      | Delete a Managed Identity from the Power Platform environment.
 | PluginAssemblies  | PluginAssembly.BindManagedIdentity | Bind the Plugin Assembly with the Managed Identity.
+| Role              | Role.GetIdByName                   | Get Id of the Role by Name.
+| Solution          | Solution.Export                    | Export a Solution.
 | SystemUsers       | SystemUser.AssociateRoles          | Associate roles to the System User.
 | SystemUsers       | SystemUser.CreateIfNotExist        | Create a System User within the Power Platform Environment.
 | SystemUsers       | SystemUser.DeleteIfExist           | Delete a System User from the Power Platform environment.
