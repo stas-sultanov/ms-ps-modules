@@ -36,7 +36,7 @@ $settings = Get-Content $settingsFile | Out-String | ConvertFrom-Json;
 
 Write-Host 'Create Environment.';
 
-$environmentInfo = PowerPlatform.AdminEnvironment.Create `
+$environmentInfo = PowerPlatform.Admin.Environment.Create `
 	-accessToken $tenantAccessToken `
 	-properties $settings.properties `
 	-ErrorAction:Stop `
@@ -53,7 +53,7 @@ Write-Host "Create Environment Complete. url: $($environmentInfo.url)";
 
 Write-Host 'Retrieve Environment.';
 
-$environmentInfoList = PowerPlatform.AdminEnvironment.RetrieveAll `
+$environmentInfoList = PowerPlatform.Admin.Environment.RetrieveAll `
 	-accessToken $tenantAccessToken `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
@@ -77,7 +77,7 @@ $updateProperties = @{
 	}
 };
 
-$environmentInfo = PowerPlatform.AdminEnvironment.Update `
+$environmentInfo = PowerPlatform.Admin.Environment.Update `
 	-accessToken $tenantAccessToken `
 	-name $environmentInfo.name `
 	-properties $updateProperties `
@@ -89,7 +89,7 @@ Write-Host "Update Environment Complete. url: $($environmentInfo.url)";
 
 Write-Host 'Delete Environment.';
 
-$deleteResult = PowerPlatform.AdminEnvironment.Delete `
+$deleteResult = PowerPlatform.Admin.Environment.Delete `
 	-accessToken $tenantAccessToken `
 	-name $environmentInfo.name `
 	-ErrorAction:Stop;

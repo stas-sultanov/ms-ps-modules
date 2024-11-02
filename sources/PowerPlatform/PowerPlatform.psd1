@@ -41,11 +41,11 @@
 
 	# Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 	FunctionsToExport      = @(
-		'AdminEnvironment.Create',
-		'AdminEnvironment.Delete',
-		'AdminEnvironment.Retrieve',
-		'AdminEnvironment.RetrieveAll',
-		'AdminEnvironment.Update',
+		'Admin.Environment.Create',
+		'Admin.Environment.Delete',
+		'Admin.Environment.Retrieve',
+		'Admin.Environment.RetrieveAll',
+		'Admin.Environment.Update',
 		'BusinessUnit.GetRootId',
 		'ManagedIdentity.CreateIfNotExist',
 		'ManagedIdentity.DeleteIfExist',

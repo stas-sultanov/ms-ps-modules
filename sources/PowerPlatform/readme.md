@@ -18,11 +18,11 @@ The following functions are implemented.
 
 | Name                               | Area               | Description
 | :---                               | :--                | :---
-| AdminEnvironment.Create            | Environments       | Create an environment within the Power Platform tenant.
-| AdminEnvironment.Delete            | Environments       | Delete an environment from the Power Platform tenant.
-| AdminEnvironment.Retrieve          | Environments       | Retrieve an environment info.
-| AdminEnvironment.RetrieveAll       | Environments       | Retrieve information about all accessible environments.
-| AdminEnvironment.Update            | Environments       | Update an environment within the Power Platform tenant.
+| Admin.Environment.Create            | Environments       | Create an environment within the Power Platform tenant.
+| Admin.Environment.Delete            | Environments       | Delete an environment from the Power Platform tenant.
+| Admin.Environment.Retrieve          | Environments       | Retrieve an environment info.
+| Admin.Environment.RetrieveAll       | Environments       | Retrieve information about all accessible environments.
+| Admin.Environment.Update            | Environments       | Update an environment within the Power Platform tenant.
 | BusinessUnit.GetRootId             | BusinessUnits      | Get Id of the root Business Unit within the Power Platform Environment.
 | ManagedIdentity.CreateIfNotExist   | ManagedIdentities  | Create a Managed Identity within the Power Platform Environment.
 | ManagedIdentity.DeleteIfExist      | ManagedIdentities  | Delete a Managed Identity from the Power Platform environment.

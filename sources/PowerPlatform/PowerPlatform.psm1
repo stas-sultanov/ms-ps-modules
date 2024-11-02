@@ -9,7 +9,7 @@ using namespace Microsoft.PowerShell.Commands;
 
 class PowerPlatformEnvironmentInfo
 {
-	[ValidateNotNullOrEmpty()] [String] $azureLocation
+	[ValidateNotNullOrEmpty()] [String] $azureRegion
 	[ValidateNotNullOrEmpty()] [String] $domainName
 	[ValidateNotNullOrEmpty()] [String] $name
 	[ValidateNotNullOrEmpty()] [Uri]    $url
@@ -23,7 +23,7 @@ $EnvironmentApiUri = 'https://api.bap.microsoft.com/providers/Microsoft.Business
 
 $EnvironmentSelect = '$select=properties.linkedEnvironmentMetadata.instanceUrl,properties.azureRegion,properties.linkedEnvironmentMetadata.domainName,name';
 
-function AdminEnvironment.Create
+function Admin.Environment.Create
 {
 	<#
 	.SYNOPSIS
@@ -65,13 +65,13 @@ function AdminEnvironment.Create
 		$name = ($response.Content | ConvertFrom-Json -AsHashtable).links.environment.path.Split('/')[4];
 
 		# retrieve environment info
-		$result = AdminEnvironment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -name $name -Verbose:$isVerbose;
+		$result = Admin.Environment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -name $name -Verbose:$isVerbose;
 
 		return $result;
 	}
 }
 
-function AdminEnvironment.Delete
+function Admin.Environment.Delete
 {
 	<#
 	.SYNOPSIS
@@ -131,7 +131,7 @@ function AdminEnvironment.Delete
 	}
 }
 
-function AdminEnvironment.Retrieve
+function Admin.Environment.Retrieve
 {
 	<#
 	.SYNOPSIS
@@ -174,17 +174,17 @@ function AdminEnvironment.Retrieve
 
 		# create result
 		$result = [PowerPlatformEnvironmentInfo]@{
-			azureLocation = $environment.properties.azureRegion
-			domainName    = $environment.properties.linkedEnvironmentMetadata.domainName
-			name          = $environment.name
-			url           = $environment.properties.linkedEnvironmentMetadata.instanceUrl
+			azureRegion = $environment.properties.azureRegion
+			domainName  = $environment.properties.linkedEnvironmentMetadata.domainName
+			name        = $environment.name
+			url         = $environment.properties.linkedEnvironmentMetadata.instanceUrl
 		};
 
 		return $result;
 	}
 }
 
-function AdminEnvironment.RetrieveAll
+function Admin.Environment.RetrieveAll
 {
 	<#
 	.SYNOPSIS
@@ -225,10 +225,10 @@ function AdminEnvironment.RetrieveAll
 		# convert items
 		$result = $environmentList | ForEach-Object {
 			[PowerPlatformEnvironmentInfo]@{
-				azureLocation = $_.properties.azureRegion
-				domainName    = $_.properties.linkedEnvironmentMetadata.domainName
-				name          = $_.name
-				url           = $_.properties.linkedEnvironmentMetadata.instanceUrl
+				azureRegion = $_.properties.azureRegion
+				domainName  = $_.properties.linkedEnvironmentMetadata.domainName
+				name        = $_.name
+				url         = $_.properties.linkedEnvironmentMetadata.instanceUrl
 			}
 		};
 
@@ -236,7 +236,7 @@ function AdminEnvironment.RetrieveAll
 	}
 }
 
-function AdminEnvironment.Update
+function Admin.Environment.Update
 {
 	<#
 	.SYNOPSIS
@@ -278,7 +278,7 @@ function AdminEnvironment.Update
 		$null = InvokeWebRequestAndGetComplete -accessToken $accessToken -body @{properties = $properties } -uri $uri -method Patch -verbose $isVerbose;
 
 		# retrieve environment info
-		$result = AdminEnvironment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -name $name -Verbose:$isVerbose;
+		$result = Admin.Environment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -name $name -Verbose:$isVerbose;
 
 		return $result;
 	}
