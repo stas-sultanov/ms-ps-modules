@@ -88,5 +88,3 @@ function Entra.Identity.AssignRole
 		Write-Host "Role [$roleName] assigned to Object with Id [$identityObjectId].";
 	}
 }
-
-Export-ModuleMember -Function Entra.Identity.AssignRole;

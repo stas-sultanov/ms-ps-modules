@@ -40,5 +40,3 @@ function Azure.CDN.EnableSecure
 		}
 	}
 }
-
-Export-ModuleMember -Function Azure.CDN.EnableSecure;

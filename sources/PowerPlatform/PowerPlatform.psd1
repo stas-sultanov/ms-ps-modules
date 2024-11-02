@@ -21,7 +21,7 @@
 	Copyright              = '© 2024 Stas Sultanov. All rights reserved'
 
 	# Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
-	DefaultCommandPrefix = 'PowerPlatform.'
+	DefaultCommandPrefix   = 'PowerPlatform.'
 
 	# Description of the functionality provided by this module
 	Description            = 'PowerShell interface for Microsoft Power Platform.'
@@ -41,12 +41,12 @@
 
 	# Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 	FunctionsToExport      = @(
+		'AdminEnvironment.Create',
+		'AdminEnvironment.Delete',
+		'AdminEnvironment.Retrieve',
+		'AdminEnvironment.RetrieveAll',
+		'AdminEnvironment.Update',
 		'BusinessUnit.GetRootId',
-		'Environment.Create',
-		'Environment.Delete',
-		'Environment.Retrieve',
-		'Environment.RetrieveAll',
-		'Environment.Update',
 		'ManagedIdentity.CreateIfNotExist',
 		'ManagedIdentity.DeleteIfExist',
 		'Role.GetIdByName',
@@ -66,7 +66,7 @@
 	ModuleList             = @('PowerPlatform')
 
 	# Version number of this module.
-	ModuleVersion          = '1.0.7'
+	ModuleVersion          = '1.1.2'
 
 	# Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 	# NestedModules = @()
@@ -78,7 +78,7 @@
 	PowerShellHostVersion  = '1.0'
 
 	# Minimum version of the Windows PowerShell engine required by this module
-	PowerShellVersion      = '7.0'
+	PowerShellVersion      = '7.4'
 
 	# Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 	PrivateData            = @{
@@ -87,13 +87,13 @@
 			IconUri      = 'https://connectoricons-prod.azureedge.net/powerplatformforadmins/icon_1.0.1056.1255.png'
 	
 			# A URL to the license for this module.
-			LicenseUri   = 'https://github.com/stas-sultanov/ms-scripts/blob/main/license'
+			LicenseUri   = 'https://github.com/stas-sultanov/ms-ps-modules/blob/main/license'
 	
 			# A URL to the main website for this project.
-			ProjectUri   = 'https://github.com/stas-sultanov/ms-scripts/tree/main/PowerPlatform'
+			ProjectUri   = 'https://github.com/stas-sultanov/ms-ps-modules/tree/main/PowerPlatform'
 	
 			# ReleaseNotes of this module
-			ReleaseNotes = 'nothing yet'
+			ReleaseNotes = 'Basic set of functions to automatically provision environments.'
 	
 			# Tags applied to this module. These help with module discovery in online galleries.
 			Tags         = @()

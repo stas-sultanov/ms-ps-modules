@@ -115,5 +115,3 @@ function Azure.ResourceGroup.Remove
 		$null = Remove-AzResourceGroup -Name $resourceGroupName -Force;
 	}
 }
-
-Export-ModuleMember -Function Azure.ResourceGroup.Remove;

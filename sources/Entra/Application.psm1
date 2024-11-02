@@ -239,8 +239,6 @@ function Entra.Application.Provision
 	}
 }
 
-Export-ModuleMember -Function Entra.Application.Provision;
-
 function Entra.Application.Remove
 {
 	<#
@@ -284,5 +282,3 @@ function Entra.Application.Remove
 		Remove-MgApplication -ApplicationId $objectId;
 	}
 }
-
-Export-ModuleMember -Function Entra.Application.Remove;

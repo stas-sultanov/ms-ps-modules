@@ -1,0 +1,30 @@
+{
+	"properties": {
+		"azureRegion": "northeurope",
+		"billingPolicy": null,
+		"cluster": null,
+		"databaseType": "CommonDataService",
+		"description": "For test purposes.",
+		"displayName": "PS Auto Test",
+		"environmentSku": "Developer",
+		"governanceConfiguration": {
+			"protectionLevel": "Standard"
+		},
+		"linkedEnvironmentMetadata": {
+			"baseLanguage": 1033,
+			"currency": {
+				"code": "EUR"
+			},
+			"domainName": "psautotest",
+			"templates": []
+		},
+		"parentEnvironmentGroup": {
+			"id": "d660baf3-d785-4ea0-9cec-94fc20e7f5bb"
+		},
+		"usedBy": {
+			"id": "0b99c6df-d35d-4032-a80a-76ee67d355a5",
+			"tenantID": "d373a7a9-c9ba-45f8-9f08-ed14a10b4b11",
+			"type": 1
+		}
+	}
+}

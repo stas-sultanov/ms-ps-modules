@@ -126,4 +126,3 @@ function Azure.SqlServer.Database.ManageUserAccess
 	}
 }
 
-Export-ModuleMember -Function Azure.SqlServer.Database.ManageUserAccess;
