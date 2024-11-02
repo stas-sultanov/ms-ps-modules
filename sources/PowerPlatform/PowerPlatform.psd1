@@ -66,7 +66,7 @@
 	ModuleList             = @('PowerPlatform')
 
 	# Version number of this module.
-	ModuleVersion          = '1.1.2'
+	ModuleVersion          = '1.1.3'
 
 	# Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 	# NestedModules = @()
