@@ -50,5 +50,3 @@ function Azure.ApplicationInsights.CreateOrResetApiKey
 		return $result;
 	}
 }
-
-Export-ModuleMember -Function Azure.ApplicationInsights.CreateOrResetApiKey;

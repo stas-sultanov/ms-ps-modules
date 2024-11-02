@@ -96,4 +96,3 @@ function Azure.DevOps.LoadAsVariables
 	}
 }
 
-Export-ModuleMember -Function Azure.DevOps.LoadAsVariables;

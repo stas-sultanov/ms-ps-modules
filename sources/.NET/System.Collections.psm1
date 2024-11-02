@@ -89,6 +89,4 @@ function Dictionary.Merge
 		# Union both sets
 		return $result;
 	}
-}
-
-Export-ModuleMember -Function Dictionary.Merge;
+};

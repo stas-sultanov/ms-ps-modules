@@ -204,5 +204,3 @@ function Entra.Group.Remove
 	# remove object
 	Remove-MgGroup -GroupId $objectId;
 }
-
-Export-ModuleMember -Function Entra.Group.Remove;

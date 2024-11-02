@@ -8,16 +8,21 @@ Collection of PowerShell modules for Microsoft products, services and technologi
 ```bash
 Root
 │
-├── .NET                        # Folder with modules for Microsoft dotNET.
+├── sources                     # Folder with sources of the modules.
+│   │
+│   ├── .NET                    # Folder with modules for Microsoft dotNET.
+│   │
+│   ├── Azure                   # Folder with modules for Microsoft Azure.
+│   │
+│   ├── AzureDevOps             # Folder with modules for Microsoft Azure DevOps.
+│   │
+│   ├── Entra                   # Folder with modules for Microsoft Entra.
+│   │
+│   └── PowerPlatform           # Folder with modules for Microsoft Power Platform.
 │
-├── Azure                       # Folder with modules for Microsoft Azure.
-│
-├── AzureDevOps                 # Folder with modules for Microsoft Azure DevOps.
-│
-├── Entra                       # Folder with modules for Microsoft Entra.
-│
-├── PowerPlatform               # Folder with modules for Microsoft Power Platform.
+├── tests                       # Folder with tests of the modules.
 │
 ├── license                     # License file.
+│
 └── readme.md                   # This file.
 ```

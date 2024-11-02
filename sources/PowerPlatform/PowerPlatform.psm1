@@ -15,68 +15,15 @@ class PowerPlatformEnvironmentInfo
 	[ValidateNotNullOrEmpty()] [Uri]    $url
 }
 
-<# ################################## #>
-<# Functions to manage Business Units #>
-<# ################################## #>
-
-function BusinessUnit.GetRootId
-{
-	<#
-	.SYNOPSIS
-		Get Id of the root Business Unit within the Power Platform Environment.
-	.DESCRIPTION
-		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/businessunit
-	.PARAMETER accessToken
-		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER apiVersion
-		Version of the Power Platform API to use.
-	.PARAMETER environmentUrl
-		Url of the Power Platform Environment.
-		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.OUTPUTS
-		Business Unit Id.
-	.NOTES
-		Copyright © 2024 Stas Sultanov.
-	#>
-
-	[CmdletBinding()]
-	[OutputType([String])]
-	param
-	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl
-	)
-	process
-	{
-		# get verbose parameter value
-		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
-
-		# create web request uri
-		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/businessunits?%24select=businessunitid&%24filter=_parentbusinessunitid_value%20eq%20null";
-
-		# invoke web request
-		$response = InvokeWebRequest -accessToken $accessToken -method Get -Uri $uri -verbose $isVerbose;
-
-		# convert response content
-		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
-
-		# get business unit id
-		$result = $responseContent.value[0].businessunitid;
-
-		return $result;
-	}
-}
-
-<# ################################ #>
-<# Functions to manage Environments #>
-<# ################################ #>
+<# ################################### #>
+<# Functions to work with Environments #>
+<# ################################### #>
 
 $EnvironmentApiUri = 'https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform';
 
 $EnvironmentSelect = '$select=properties.linkedEnvironmentMetadata.instanceUrl,properties.azureRegion,properties.linkedEnvironmentMetadata.domainName,name';
 
-function Environment.Create
+function AdminEnvironment.Create
 {
 	<#
 	.SYNOPSIS
@@ -87,8 +34,8 @@ function Environment.Create
 		Bearer token to access. The token AUD must include 'https://service.powerapps.com/'.
 	.PARAMETER apiVersion
 		Version of the Power Platform API to use.
-	.PARAMETER settings
-		Object that contains all settings required to create an environment.
+	.PARAMETER properties
+		Object that contains configuration properties to create an environment.
 	.OUTPUTS
 		Short information about the environment.
 	.NOTES
@@ -101,7 +48,7 @@ function Environment.Create
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = '2024-05-01',
-		[Parameter(Mandatory = $true)]  [ValidateNotNull()]        [Object]       $settings
+		[Parameter(Mandatory = $true)]  [ValidateNotNull()]        [Object]       $properties
 	)
 	process
 	{
@@ -112,19 +59,19 @@ function Environment.Create
 		$uri = [Uri] "$($EnvironmentApiUri)/environments?api-version=$($apiVersion)&retainOnProvisionFailure=false";
 
 		# invoke web request
-		$response = InvokeWebRequestAndGetComplete -accessToken $accessToken -body $settings -method Post -uri $uri -verbose $isVerbose;
+		$response = InvokeWebRequestAndGetComplete -accessToken $accessToken -body @{properties = $properties } -method Post -uri $uri -verbose $isVerbose;
 
 		# get environment name
 		$name = ($response.Content | ConvertFrom-Json -AsHashtable).links.environment.path.Split('/')[4];
 
 		# retrieve environment info
-		$result = Environment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -name $name -Verbose:$isVerbose;
+		$result = AdminEnvironment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -name $name -Verbose:$isVerbose;
 
 		return $result;
 	}
 }
 
-function Environment.Delete
+function AdminEnvironment.Delete
 {
 	<#
 	.SYNOPSIS
@@ -184,7 +131,7 @@ function Environment.Delete
 	}
 }
 
-function Environment.Retrieve
+function AdminEnvironment.Retrieve
 {
 	<#
 	.SYNOPSIS
@@ -237,7 +184,7 @@ function Environment.Retrieve
 	}
 }
 
-function Environment.RetrieveAll
+function AdminEnvironment.RetrieveAll
 {
 	<#
 	.SYNOPSIS
@@ -289,7 +236,7 @@ function Environment.RetrieveAll
 	}
 }
 
-function Environment.Update
+function AdminEnvironment.Update
 {
 	<#
 	.SYNOPSIS
@@ -302,8 +249,8 @@ function Environment.Update
 		Version of the Power Platform API to use.
 	.PARAMETER name
 		Name of the Power Platform environment.
-	.PARAMETER settings
-		Object that contains all settings required to update an environment.
+	.PARAMETER properties
+		Object that contains configuration properties to update the environment.
 	.OUTPUTS
 		Short information about the environment.
 	.NOTES
@@ -317,7 +264,7 @@ function Environment.Update
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = '2024-05-01',
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $name,
-		[Parameter(Mandatory = $true)]  [ValidateNotNull()]        [Object]       $settings
+		[Parameter(Mandatory = $true)]  [ValidateNotNull()]        [Object]       $properties
 	)
 	process
 	{
@@ -328,18 +275,71 @@ function Environment.Update
 		$uri = [Uri] "$($EnvironmentApiUri)/scopes/admin/environments/$($name)?api-version=$($apiVersion)";
 		
 		# invoke web request
-		$null = InvokeWebRequestAndGetComplete -accessToken $accessToken -body $settings -uri $uri -method Patch -verbose $isVerbose;
+		$null = InvokeWebRequestAndGetComplete -accessToken $accessToken -body @{properties = $properties } -uri $uri -method Patch -verbose $isVerbose;
 
 		# retrieve environment info
-		$result = Environment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -name $name -Verbose:$isVerbose;
+		$result = AdminEnvironment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -name $name -Verbose:$isVerbose;
 
 		return $result;
 	}
 }
 
-<# ###################################### #>
-<# Functions to manage Managed Identities #>
-<# ###################################### #>
+<# ##################################### #>
+<# Functions to work with Business Units #>
+<# ##################################### #>
+
+function BusinessUnit.GetRootId
+{
+	<#
+	.SYNOPSIS
+		Get Id of the root Business Unit within the Power Platform Environment.
+	.DESCRIPTION
+		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/businessunit
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER apiVersion
+		Version of the Power Platform API to use.
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.OUTPUTS
+		Business Unit Id.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	[OutputType([String])]
+	param
+	(
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create web request uri
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/businessunits?%24select=businessunitid&%24filter=_parentbusinessunitid_value%20eq%20null";
+
+		# invoke web request
+		$response = InvokeWebRequest -accessToken $accessToken -method Get -Uri $uri -verbose $isVerbose;
+
+		# convert response content
+		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
+
+		# get business unit id
+		$result = $responseContent.value[0].businessunitid;
+
+		return $result;
+	}
+}
+
+<# ####################################### #>
+<# Functions to work with Managed Identity #>
+<# ####################################### #>
 
 function ManagedIdentity.CreateIfNotExist
 {
@@ -470,9 +470,9 @@ function ManagedIdentity.DeleteIfExist
 	}
 }
 
-<# ######################### #>
-<# Functions to manage Roles #>
-<# ######################### #>
+<# ########################### #>
+<# Functions to work with Role #>
+<# ########################### #>
 
 function Role.GetIdByName
 {
@@ -531,9 +531,9 @@ function Role.GetIdByName
 	}
 }
 
-<# ############################# #>
-<# Functions to manage Solutions #>
-<# ############################# #>
+<# ############################### #>
+<# Functions to work with Solution #>
+<# ############################### #>
 
 function Solution.Export
 {
@@ -597,15 +597,15 @@ function Solution.Export
 	}
 }
 
-<# ################################ #>
-<# Functions to manage System Users #>
-<# ################################ #>
+<# ################################## #>
+<# Functions to work with System User #>
+<# ################################## #>
 
 function SystemUser.AssociateRoles
 {
 	<#
 	.SYNOPSIS
-		Associate roles to the System User.
+		Associate role to the System User.
 	.DESCRIPTION
 		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/systemuser
 	.PARAMETER accessToken
@@ -617,8 +617,8 @@ function SystemUser.AssociateRoles
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
 	.PARAMETER id
 		Id of the System User within the Power Platform Environment.
-	.PARAMETER roles
-		Array of Roles to assign to the System User.
+	.PARAMETER roleId
+		Id of the Role to assign to the System User.
 	.NOTES
 		Copyright © 2024 Stas Sultanov.
 	#>
@@ -630,27 +630,23 @@ function SystemUser.AssociateRoles
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $id,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid[]]       $roles
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $roleId
 	)
 	process
 	{
 		# get verbose parameter value
 		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
 
-		# assign roles
-		foreach ($roleId in $roles)
-		{
-			# create web request uri
-			$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers($($id))%2Fsystemuserroles_association%2F%24ref";
+		# create web request uri
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers($($id))%2Fsystemuserroles_association%2F%24ref";
 
-			# create web request body
-			$requestBody = @{
-				'@odata.id' = "$($environmentUrl)api/data/$($apiVersion)/roles($($roleId))"
-			};
+		# create web request body
+		$requestBody = @{
+			'@odata.id' = "$($environmentUrl)api/data/$($apiVersion)/roles($($roleId))"
+		};
 
-			# invoke web request
-			$null = InvokeWebRequest -accessToken $accessToken -body $requestBody -method Post -uri $uri -verbose $isVerbose;
-		}
+		# invoke web request
+		$null = InvokeWebRequest -accessToken $accessToken -body $requestBody -method Post -uri $uri -verbose $isVerbose;
 	}
 }
 
@@ -929,14 +925,14 @@ function InvokeWebRequest
 			# invoke web request
 			return Invoke-WebRequest -Authentication Bearer -Body $requestBody -ContentType 'application/json' -Method $method -Token $accessToken -Uri $uri -Verbose:$verbose;
 		}
-		catch [Microsoft.PowerShell.Commands.HttpResponseException]
+		catch [HttpResponseException]
 		{
 			Write-Host 'An error occurred calling the Power Platform:' -ForegroundColor Red;
 
-			Write-Host "StatusCode: $($_.Exception.StatusCode) ($($_.Exception.StatusCode))";
+			Write-Host "StatusCode: $([Int32] $_.Exception.StatusCode) ($($_.Exception.StatusCode))";
 
 			# Replaces escaped characters in the JSON
-			[Regex]::Replace($_.ErrorDetails.Message, '\\[Uu]([0-9A-Fa-f]{4})', { [char]::ToString([Convert]::ToInt32($args[0].Groups[1].Value, 16)) } )
+			[Regex]::Replace($_.ErrorDetails.Message, '\\[Uu]([0-9A-Fa-f]{4})', { [Char]::ToString([Convert]::ToInt32($args[0].Groups[1].Value, 16)) } )
 		}
 		catch
 		{

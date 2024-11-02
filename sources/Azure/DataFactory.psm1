@@ -61,5 +61,3 @@ function Azure.DataFactory.SetTriggerState
 		}
 	}
 }
-
-Export-ModuleMember -Function Azure.DataFactory.SetTriggerState;
