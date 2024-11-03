@@ -18,15 +18,15 @@ The following functions are implemented.
 
 | Name                               | Area               | Description
 | :---                               | :--                | :---
-| Admin.Environment.Create            | Environments       | Create an environment within the Power Platform tenant.
-| Admin.Environment.Delete            | Environments       | Delete an environment from the Power Platform tenant.
-| Admin.Environment.Retrieve          | Environments       | Retrieve an environment info.
-| Admin.Environment.RetrieveAll       | Environments       | Retrieve information about all accessible environments.
-| Admin.Environment.Update            | Environments       | Update an environment within the Power Platform tenant.
-| BusinessUnit.GetRootId             | BusinessUnits      | Get Id of the root Business Unit within the Power Platform Environment.
-| ManagedIdentity.CreateIfNotExist   | ManagedIdentities  | Create a Managed Identity within the Power Platform Environment.
-| ManagedIdentity.DeleteIfExist      | ManagedIdentities  | Delete a Managed Identity from the Power Platform environment.
-| PluginAssembly.BindManagedIdentity | PluginAssemblies   | Bind the Plugin Assembly with the Managed Identity.
+| Admin.Environment.Create           | Environments       | Create an environment within the Power Platform tenant.
+| Admin.Environment.Delete           | Environments       | Delete an environment from the Power Platform tenant.
+| Admin.Environment.Retrieve         | Environments       | Retrieve an environment info.
+| Admin.Environment.RetrieveAll      | Environments       | Retrieve information about all accessible environments.
+| Admin.Environment.Update           | Environments       | Update an environment within the Power Platform tenant.
+| BusinessUnit.GetRootId             | Business Units     | Get Id of the root Business Unit within the Power Platform Environment.
+| ManagedIdentity.CreateIfNotExist   | Managed Identities | Create a Managed Identity within the Power Platform Environment.
+| ManagedIdentity.DeleteIfExist      | Managed Identities | Delete a Managed Identity from the Power Platform environment.
+| PluginAssembly.BindManagedIdentity | Plugin Assemblies  | Bind the Plugin Assembly with the Managed Identity.
 | Role.GetIdByName                   | Roles              | Get Id of the Role by Name.
 | Solution.Export                    | Solutions          | Export a Solution.
 | SystemUser.AssociateRoles          | System Users       | Associate roles to the System User.
