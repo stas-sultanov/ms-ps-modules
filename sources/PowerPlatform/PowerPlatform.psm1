@@ -23,6 +23,56 @@ $EnvironmentApiUri = 'https://api.bap.microsoft.com/providers/Microsoft.Business
 
 $EnvironmentSelect = '$select=properties.linkedEnvironmentMetadata.instanceUrl,properties.azureRegion,properties.linkedEnvironmentMetadata.domainName,name';
 
+
+function Admin.Environment.AddUser
+{
+	<#
+	.SYNOPSIS
+		Add an Entra User to the environment.
+	.DESCRIPTION
+		Can be executed by an Identity that has Power Platform Administrator role within Entra.
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://service.powerapps.com/'.
+	.PARAMETER apiVersion
+		Version of the Power Platform API to use.
+	.PARAMETER environmentName
+		Name of the Power Platform environment.
+	.PARAMETER userObjectId
+		The ObjectId of a user.
+	.OUTPUTS
+		Information about the user.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	param
+	(
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = '2021-04-01',
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $environmentName,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $userObjectId
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create web request uri
+		$uri = [Uri] "$($EnvironmentApiUri)/scopes/admin/environments/$($environmentName)/addUser?api-version=$($apiVersion)";
+
+		# create web request body
+		$requestBody = @{
+			ObjectId = $userObjectId
+		};
+
+		# invoke web request
+		$response = InvokeWebRequest -accessToken $accessToken -body $requestBody -method Post -uri $uri -verbose $isVerbose;
+
+		return $response;
+	}
+}
+
 function Admin.Environment.Create
 {
 	<#
@@ -62,10 +112,10 @@ function Admin.Environment.Create
 		$response = InvokeWebRequestAndGetComplete -accessToken $accessToken -body @{properties = $properties } -method Post -uri $uri -verbose $isVerbose;
 
 		# get environment name
-		$name = ($response.Content | ConvertFrom-Json -AsHashtable).links.environment.path.Split('/')[4];
+		$environmentName = ($response.Content | ConvertFrom-Json -AsHashtable).links.environment.path.Split('/')[4];
 
 		# retrieve environment info
-		$result = Admin.Environment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -name $name -Verbose:$isVerbose;
+		$result = Admin.Environment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -environmentName $environmentName -Verbose:$isVerbose;
 
 		return $result;
 	}
@@ -82,7 +132,7 @@ function Admin.Environment.Delete
 		Bearer token to access. The token AUD must include 'https://service.powerapps.com/'.
 	.PARAMETER apiVersion
 		Version of the Power Platform API to use.
-	.PARAMETER name
+	.PARAMETER environmentName
 		Name of the Power Platform environment.
 	.OUTPUTS
 		True if environment deleted, False otherwise.
@@ -96,7 +146,7 @@ function Admin.Environment.Delete
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = '2021-04-01',
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $name
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $environmentName
 	)
 	process
 	{
@@ -104,7 +154,7 @@ function Admin.Environment.Delete
 		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
 
 		# create requests base uri
-		$baseRequestUri = "$($EnvironmentApiUri)/scopes/admin/environments/$($name)";
+		$baseRequestUri = "$($EnvironmentApiUri)/scopes/admin/environments/$($environmentName)";
 
 		# create validation web request uri
 		$validateUri = [Uri] "$($baseRequestUri)/validateDelete?api-version=$($apiVersion)";
@@ -142,7 +192,7 @@ function Admin.Environment.Retrieve
 		Bearer token to access. The token AUD must include 'https://service.powerapps.com/'.
 	.PARAMETER apiVersion
 		Version of the Power Platform API to use.
-	.PARAMETER name
+	.PARAMETER environmentName
 		Name of the Power Platform environment.
 	.OUTPUTS
 		Short information about the environment.
@@ -156,7 +206,7 @@ function Admin.Environment.Retrieve
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = '2024-05-01',
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $name
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $environmentName
 	)
 	process
 	{
@@ -164,7 +214,7 @@ function Admin.Environment.Retrieve
 		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
 
 		# create web request uri
-		$uri = [Uri] "$($EnvironmentApiUri)/scopes/admin/environments/$($name)?api-version=$($apiVersion)&$($EnvironmentSelect)";
+		$uri = [Uri] "$($EnvironmentApiUri)/scopes/admin/environments/$($environmentName)?api-version=$($apiVersion)&$($EnvironmentSelect)";
 
 		# invoke web request
 		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $isVerbose;
@@ -247,7 +297,7 @@ function Admin.Environment.Update
 		Bearer token to access. The token AUD must include 'https://service.powerapps.com/'.
 	.PARAMETER apiVersion
 		Version of the Power Platform API to use.
-	.PARAMETER name
+	.PARAMETER environmentName
 		Name of the Power Platform environment.
 	.PARAMETER properties
 		Object that contains configuration properties to update the environment.
@@ -263,7 +313,7 @@ function Admin.Environment.Update
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = '2024-05-01',
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $name,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $environmentName,
 		[Parameter(Mandatory = $true)]  [ValidateNotNull()]        [Object]       $properties
 	)
 	process
@@ -272,13 +322,13 @@ function Admin.Environment.Update
 		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
 
 		# create web request uri
-		$uri = [Uri] "$($EnvironmentApiUri)/scopes/admin/environments/$($name)?api-version=$($apiVersion)";
+		$uri = [Uri] "$($EnvironmentApiUri)/scopes/admin/environments/$($environmentName)?api-version=$($apiVersion)";
 		
 		# invoke web request
 		$null = InvokeWebRequestAndGetComplete -accessToken $accessToken -body @{properties = $properties } -uri $uri -method Patch -verbose $isVerbose;
 
 		# retrieve environment info
-		$result = Admin.Environment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -name $name -Verbose:$isVerbose;
+		$result = Admin.Environment.Retrieve -accessToken $accessToken -apiVersion $apiVersion -environmentName $environmentName -Verbose:$isVerbose;
 
 		return $result;
 	}
@@ -357,7 +407,7 @@ function ManagedIdentity.CreateIfNotExist
 	.PARAMETER environmentUrl
 		Url of the Power Platform environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER id
+	.PARAMETER managedIdentityId
 		Id of the Managed Identity within the Power Platform Environment.
 	.PARAMETER tenantId
 		Id of the Entra tenant.
@@ -375,7 +425,7 @@ function ManagedIdentity.CreateIfNotExist
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $applicationId,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $id,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $managedIdentityId,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $tenantId
 	)
 	process
@@ -384,7 +434,7 @@ function ManagedIdentity.CreateIfNotExist
 		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
 
 		# check if identity exist
-		$exist = ManagedIdentity.Exist -accessToken $accessToken -apiVersion $apiVersion -environmentUrl $environmentUrl -id $id -isVerbose $isVerbose;
+		$exist = ManagedIdentity.Exist -accessToken $accessToken -apiVersion $apiVersion -environmentUrl $environmentUrl -managedIdentityId $managedIdentityId -isVerbose $isVerbose;
 
 		if ($exist)
 		{
@@ -395,7 +445,7 @@ function ManagedIdentity.CreateIfNotExist
 		$body = @{
 			applicationid     = $applicationId
 			credentialsource  = 2
-			managedidentityid = $id
+			managedidentityid = $managedIdentityId
 			subjectscope      = 1
 			tenantid          = $tenantId
 		};
@@ -430,7 +480,7 @@ function ManagedIdentity.DeleteIfExist
 	.PARAMETER environmentUrl
 		Url of the Power Platform environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER id
+	.PARAMETER managedIdentityId
 		Id of the Managed Identity within the Power Platform Environment.
 	.OUTPUTS
 		True if Managed Identity deleted, False otherwise.
@@ -445,7 +495,7 @@ function ManagedIdentity.DeleteIfExist
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $id
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $managedIdentityId
 	)
 	process
 	{
@@ -453,7 +503,7 @@ function ManagedIdentity.DeleteIfExist
 		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
 
 		# check if identity exist
-		$exist = ManagedIdentity.Exist -accessToken $accessToken -apiVersion $apiVersion -environmentUrl $environmentUrl -id $id -verbose $isVerbose;
+		$exist = ManagedIdentity.Exist -accessToken $accessToken -apiVersion $apiVersion -environmentUrl $environmentUrl -managedIdentityId $managedIdentityId -verbose $isVerbose;
 
 		if (!$exist)
 		{
@@ -461,7 +511,7 @@ function ManagedIdentity.DeleteIfExist
 		}
 
 		# create web request uri
-		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/managedidentities($($id))";
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/managedidentities($($managedIdentityId))";
 
 		# invoke web request
 		$null = InvokeWebRequest -accessToken $accessToken -method Delete -uri $uri -verbose $isVerbose;
@@ -488,7 +538,7 @@ function Role.GetIdByName
 	.PARAMETER environmentUrl
 		Url of the Power Platform Environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER name
+	.PARAMETER roleName
 		Name of the role.
 	.OUTPUTS
 		Id of the Role if it is found, null otherwise.
@@ -503,7 +553,7 @@ function Role.GetIdByName
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $name
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $roleName
 	)
 	process
 	{
@@ -511,7 +561,7 @@ function Role.GetIdByName
 		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
 
 		# create web request uri
-		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/roles?`$select=roleid&`$filter=name eq '$($name)'";
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/roles?`$select=roleid&`$filter=name eq '$($roleName)'";
 
 		# invoke web request
 		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $isVerbose;
@@ -601,7 +651,7 @@ function Solution.Export
 <# Functions to work with System User #>
 <# ################################## #>
 
-function SystemUser.AssociateRoles
+function SystemUser.AssociateRole
 {
 	<#
 	.SYNOPSIS
@@ -615,10 +665,10 @@ function SystemUser.AssociateRoles
 	.PARAMETER environmentUrl
 		Url of the Power Platform Environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER id
-		Id of the System User within the Power Platform Environment.
 	.PARAMETER roleId
 		Id of the Role to assign to the System User.
+	.PARAMETER systemUserId
+		Id of the System User within the Power Platform Environment.
 	.NOTES
 		Copyright © 2024 Stas Sultanov.
 	#>
@@ -629,8 +679,8 @@ function SystemUser.AssociateRoles
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $id,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $roleId
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $roleId,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $systemUserId
 	)
 	process
 	{
@@ -638,7 +688,7 @@ function SystemUser.AssociateRoles
 		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
 
 		# create web request uri
-		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers($($id))%2Fsystemuserroles_association%2F%24ref";
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers($($systemUserId))%2Fsystemuserroles_association%2F%24ref";
 
 		# create web request body
 		$requestBody = @{
@@ -669,7 +719,7 @@ function SystemUser.CreateIfNotExist
 	.PARAMETER environmentUrl
 		Url of the Power Platform Environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER id
+	.PARAMETER systemUserId
 		Id of the System User within the Power Platform Environment.
 	.OUTPUTS
 		System User Id.
@@ -686,7 +736,7 @@ function SystemUser.CreateIfNotExist
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $applicationId,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $businessUnitId,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $id
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $systemUserId
 	)
 	process
 	{
@@ -694,7 +744,7 @@ function SystemUser.CreateIfNotExist
 		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
 
 		# check if system user exist
-		$exist = SystemUser.Exist -accessToken $accessToken -apiVersion $apiVersion -environmentUrl $environmentUrl -id $id -verbose $isVerbose;
+		$exist = SystemUser.Exist -accessToken $accessToken -apiVersion $apiVersion -environmentUrl $environmentUrl -systemUserId $systemUserId -verbose $isVerbose;
 
 		if ($exist)
 		{
@@ -710,7 +760,7 @@ function SystemUser.CreateIfNotExist
 			applicationid               = $applicationId
 			'businessunitid@odata.bind' = "/businessunits($businessUnitId)"
 			isdisabled                  = $false
-			systemuserid                = $id
+			systemuserid                = $systemUserId
 		};
 
 		# invoke web request
@@ -727,7 +777,7 @@ function SystemUser.CreateIfNotExist
 	}
 }
 
-function SystemUser.DeleteIfExist
+function SystemUser.DisableAndDeleteIfExist
 {
 	<#
 	.SYNOPSIS
@@ -741,7 +791,7 @@ function SystemUser.DeleteIfExist
 	.PARAMETER environmentUrl
 		Url of the Power Platform Environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER id
+	.PARAMETER systemUserId
 		Id of the System User within the Power Platform Environment.
 	.OUTPUTS
 		True if System User deleted, False otherwise.
@@ -755,8 +805,8 @@ function SystemUser.DeleteIfExist
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $id,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $systemUserId
 	)
 	process
 	{
@@ -764,7 +814,7 @@ function SystemUser.DeleteIfExist
 		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
 
 		# check if system user exist
-		$exist = SystemUser.Exist -accessToken $accessToken -apiVersion $apiVersion -environmentUrl $environmentUrl -id $id -verbose $isVerbose;
+		$exist = SystemUser.Exist -accessToken $accessToken -apiVersion $apiVersion -environmentUrl $environmentUrl -systemUserId $systemUserId -verbose $isVerbose;
 
 		if (!$exist)
 		{
@@ -787,6 +837,63 @@ function SystemUser.DeleteIfExist
 	}
 }
 
+
+function SystemUser.GetIdByEntraObjectId
+{
+	<#
+	.SYNOPSIS
+		Get Id of the System User by Entra Object Id.
+	.DESCRIPTION
+		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/systemuser
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER apiVersion
+		Version of the Power Platform API to use.
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER objectId
+		Object Id of the System User within the Entra.
+	.OUTPUTS
+		System User Id if found, $null otherwise.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	[OutputType([Guid])]
+	param
+	(
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $objectId
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create web request uri
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers?`$select=systemuserid&`$filter=azureactivedirectoryobjectid eq '$($objectId)'";
+
+		# invoke web request
+		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $isVerbose;
+
+		# convert response content
+		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
+
+		if ($responseContent.value.Count -eq 0)
+		{
+			return $null;
+		}
+
+		$result = $responseContent.value[0].systemuserid;
+
+		return $result;
+	}
+}
+
 <# ######################### #>
 <# Internal helper functions #>
 <# ######################### #>
@@ -799,13 +906,13 @@ function ManagedIdentity.Exist
 		[SecureString] $accessToken,
 		[String]       $apiVersion,
 		[Uri]          $environmentUrl,
-		[Guid]         $id,
+		[Guid]         $managedIdentityId,
 		[Boolean]      $verbose
 	)
 	process
 	{
 		# create web request uri
-		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/managedidentities?`$select=managedidentityid&`$filter=managedidentityid eq '$($id)'";
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/managedidentities?`$select=managedidentityid&`$filter=managedidentityid eq '$($managedIdentityId)'";
 
 		# invoke web request
 		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $verbose;
@@ -830,13 +937,13 @@ function SystemUser.Exist
 		[SecureString] $accessToken,
 		[String]       $apiVersion,
 		[Uri]          $environmentUrl,
-		[Guid]         $id,
+		[Guid]         $systemUserId,
 		[Boolean]      $verbose
 	)
 	process
 	{
 		# create web request uri
-		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers?`$select=systemuserid&`$filter=systemuserid eq '$($id)'";
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers?`$select=systemuserid&`$filter=systemuserid eq '$($systemUserId)'";
 
 		# invoke web request
 		$response = InvokeWebRequest -accessToken $accessToken -method Get -uri $uri -verbose $verbose;
@@ -929,7 +1036,7 @@ function InvokeWebRequest
 		{
 			Write-Host 'An error occurred calling the Power Platform:' -ForegroundColor Red;
 
-			Write-Host "StatusCode: $([Int32] $_.Exception.StatusCode) ($($_.Exception.StatusCode))";
+			Write-Host "StatusCode: $([Int32] $_.Exception.Response.StatusCode) ($($_.Exception.Response.StatusCode))";
 
 			# Replaces escaped characters in the JSON
 			[Regex]::Replace($_.ErrorDetails.Message, '\\[Uu]([0-9A-Fa-f]{4})', { [Char]::ToString([Convert]::ToInt32($args[0].Groups[1].Value, 16)) } )

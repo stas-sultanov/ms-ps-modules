@@ -9,18 +9,18 @@
 param
 (
 	[Parameter(Mandatory = $false)] [Boolean] $isVerbose = $false,
-	[Parameter(Mandatory = $false)] [String]  $settingsFile = 'environment.json'
+	[Parameter(Mandatory = $false)] [String]  $parametersFile = 'environment.json'
 )
 
 # disable annoying Az warnings
-Update-AzConfig -DisplayBreakingChangeWarning $false;
+$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
 
 # get current script location
 $invocationPath = Split-Path $script:MyInvocation.MyCommand.Path;
 
 Import-Module (Join-Path $invocationPath '..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
 
-$settingsFile = Join-Path $invocationPath $settingsFile;
+$parametersFile = Join-Path $invocationPath $parametersFile;
 
 <# prerequisite #>
 
@@ -28,9 +28,9 @@ Write-Host 'Get access token to access the Power Platform Tenant.';
 
 $tenantAccessToken = (Get-AzAccessToken -ResourceUrl 'https://service.powerapps.com/' -AsSecureString).Token;
 
-Write-Host 'Load environment configuration settings.';
+Write-Host 'Load environment parameters.';
 
-$settings = Get-Content $settingsFile | Out-String | ConvertFrom-Json;
+$parameters = Get-Content $parametersFile | Out-String | ConvertFrom-Json -AsHashtable;
 
 <# test create #>
 
@@ -38,20 +38,20 @@ Write-Host 'Create Environment.';
 
 $environmentInfo = PowerPlatform.Admin.Environment.Create `
 	-accessToken $tenantAccessToken `
-	-properties $settings.properties `
+	-properties $parameters.properties `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
 
 if ($null -eq $environmentInfo)
 {
-	throw 'Create Fail.';
+	throw 'Create Environment Fail.';
 }
 
 Write-Host "Create Environment Complete. url: $($environmentInfo.url)";
 
 <# test retrieve #>
 
-Write-Host 'Retrieve Environment.';
+Write-Host 'Retrieve All Environments.';
 
 $environmentInfoList = PowerPlatform.Admin.Environment.RetrieveAll `
 	-accessToken $tenantAccessToken `
@@ -62,10 +62,62 @@ $environmentInfo = $environmentInfoList | Where-Object { $_.domainName -eq $envi
 
 if ($null -eq $environmentInfo)
 {
-	throw 'Retrieve Fail.';
+	throw 'Retrieve All Environments Fail.';
 }
 
-Write-Host "Retrieve Environment Complete. url: $($environmentInfo.url)";
+Write-Host "Retrieve All Environments Complete. url: $($environmentInfo.url)";
+
+<# test add user #>
+
+Write-Host 'Get access token to access the environment.';
+
+$environmentAccessToken = (Get-AzAccessToken -ResourceUrl $environmentInfo.url -AsSecureString).Token;
+
+Write-Host 'Add User to Environment.';
+
+foreach ($key in $parameters.users.Keys)
+{
+	$user = $parameters.users[$key];
+
+	Write-Host "User: $key";
+
+	# add user
+	PowerPlatform.Admin.Environment.AddUser `
+		-accessToken $tenantAccessToken `
+		-environmentName $environmentInfo.name `
+		-userObjectId $user.objectId `
+		-ErrorAction:Stop;
+
+	# get user id
+	$systemUserId = PowerPlatform.SystemUser.GetIdByEntraObjectId `
+		-accessToken $environmentAccessToken `
+		-environmentUrl $environmentInfo.url `
+		-objectId $user.objectId `
+		-ErrorAction:Stop;
+
+	foreach ($roleName in $user.roles)
+	{
+		# get role id
+		$roleId = PowerPlatform.Role.GetIdByName `
+			-accessToken $environmentAccessToken `
+			-environmentUrl $environmentInfo.url `
+			-roleName $roleName `
+			-ErrorAction:Stop;
+
+		# associate role to user
+		PowerPlatform.SystemUser.AssociateRole `
+			-accessToken $environmentAccessToken `
+			-environmentUrl $environmentInfo.url `
+			-systemUserId $systemUserId `
+			-roleId $roleId `
+			-ErrorAction:Stop `
+			-Verbose:$isVerbose;
+	}
+
+	Write-Host "User: $key, id: $systemUserId";
+};
+
+Write-Host 'Add User to Environment Complete.';
 
 <# test update #>
 
@@ -73,13 +125,13 @@ Write-Host 'Update Environment.';
 
 $updateProperties = @{
 	linkedEnvironmentMetadata = @{
-		domainName = $settings.properties.linkedEnvironmentMetadata.domainName + 'upd'
+		domainName = $parameters.properties.linkedEnvironmentMetadata.domainName + 'upd'
 	}
 };
 
 $environmentInfo = PowerPlatform.Admin.Environment.Update `
 	-accessToken $tenantAccessToken `
-	-name $environmentInfo.name `
+	-environmentName $environmentInfo.name `
 	-properties $updateProperties `
 	-ErrorAction:Stop;
 
@@ -91,7 +143,9 @@ Write-Host 'Delete Environment.';
 
 $deleteResult = PowerPlatform.Admin.Environment.Delete `
 	-accessToken $tenantAccessToken `
-	-name $environmentInfo.name `
+	-environmentName $environmentInfo.name `
 	-ErrorAction:Stop;
 
 Write-Host "Delete Environment Complete. success: $deleteResult";
+
+<# end #>

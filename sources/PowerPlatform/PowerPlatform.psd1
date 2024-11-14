@@ -41,6 +41,7 @@
 
 	# Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 	FunctionsToExport      = @(
+		'Admin.Environment.AddUser',
 		'Admin.Environment.Create',
 		'Admin.Environment.Delete',
 		'Admin.Environment.Retrieve',
@@ -51,9 +52,10 @@
 		'ManagedIdentity.DeleteIfExist',
 		'Role.GetIdByName',
 		'Solution.Export',
-		'SystemUser.AssociateRoles',
+		'SystemUser.AssociateRole',
 		'SystemUser.CreateIfNotExist',
-		'SystemUser.DeleteIfExist'
+		'SystemUser.DisableAndDeleteIfExist',
+		'SystemUser.GetIdByEntraObjectId'
 	)
 
 	# ID used to uniquely identify this module

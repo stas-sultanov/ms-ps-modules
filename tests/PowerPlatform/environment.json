@@ -26,5 +26,13 @@
 			"tenantID": "d373a7a9-c9ba-45f8-9f08-ed14a10b4b11",
 			"type": 1
 		}
+	},
+	"users": {
+		"TestUser": {
+			"objectId": "30458623-e9e9-485d-ae6c-1055daa38bb0",
+			"roles": [
+				"System Administrator"
+			]
+		}
 	}
 }

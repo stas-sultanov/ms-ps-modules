@@ -18,6 +18,7 @@ The following functions are implemented.
 
 | Name                               | Area               | Description
 | :---                               | :--                | :---
+| Admin.Environment.AddUser          | Environments       | Add an Entra User to the environment.
 | Admin.Environment.Create           | Environments       | Create an environment within the Power Platform tenant.
 | Admin.Environment.Delete           | Environments       | Delete an environment from the Power Platform tenant.
 | Admin.Environment.Retrieve         | Environments       | Retrieve an environment info.
@@ -29,9 +30,10 @@ The following functions are implemented.
 | PluginAssembly.BindManagedIdentity | Plugin Assemblies  | Bind the Plugin Assembly with the Managed Identity.
 | Role.GetIdByName                   | Roles              | Get Id of the Role by Name.
 | Solution.Export                    | Solutions          | Export a Solution.
-| SystemUser.AssociateRoles          | System Users       | Associate roles to the System User.
+| SystemUser.AssociateRole           | System Users       | Associate roles to the System User.
 | SystemUser.CreateIfNotExist        | System Users       | Create a System User within the Power Platform Environment.
-| SystemUser.DeleteIfExist           | System Users       | Delete a System User from the Power Platform environment.
+| SystemUser.DisableAndDeleteIfExist | System Users       | Disable and delete a System User from the Power Platform environment.
+| SystemUser.GetIdByEntraObjectId    | System Users       | Get Id of the System User by Entra Object Id.
 
 # Use
 

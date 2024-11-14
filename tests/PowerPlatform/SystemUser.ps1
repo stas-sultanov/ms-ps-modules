@@ -3,8 +3,6 @@
 	Run tests related to Managed Identity.
 .DESCRIPTION
 	Connect-AzAccount must be run prior executing this script.
-.PARAMETER applicationId
-	Application (Client) Id of the Entra Service Identity.
 .PARAMETER environmentUrl
 	Url of the Power Platform Environment.
 	Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
@@ -19,7 +17,7 @@ param
 )
 
 # disable annoying Az warnings
-Update-AzConfig -DisplayBreakingChangeWarning $false;
+$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
 
 # get current script location
 $invocationPath = Split-Path $script:MyInvocation.MyCommand.Path;
@@ -30,12 +28,12 @@ Import-Module (Join-Path $invocationPath '..\..\sources\PowerPlatform\PowerPlatf
 
 Write-Host 'Get access token to access the environment.';
 
-$accessToken = (Get-AzAccessToken -ResourceUrl $environmentUrl -AsSecureString).Token;
+$environmentAccessToken = (Get-AzAccessToken -ResourceUrl $environmentUrl -AsSecureString).Token;
 
 Write-Host 'Get root Business Unit Id.';
 
 $rootBusinessUnitId = PowerPlatform.BusinessUnit.GetRootId `
-	-accessToken $accessToken `
+	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
@@ -45,7 +43,7 @@ Write-Host "Get root Business Unit Id Complete. id: $rootBusinessUnitId";
 Write-Host 'Get Basic User Role Id.';
 
 $basicUserRoleId = PowerPlatform.Role.GetIdByName `
-	-accessToken $accessToken `
+	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
 	-name 'Basic User' `
 	-ErrorAction:Stop `
@@ -58,7 +56,7 @@ Write-Host "Get Basic User Role Id Complete. id: $basicUserRoleId";
 Write-Host "Create System User. applicationId: $identityClientId";
 
 $systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
-	-accessToken $accessToken `
+	-accessToken $environmentAccessToken `
 	-applicationId $identityClientId `
 	-businessUnitId $rootBusinessUnitId `
 	-environmentUrl $environmentUrl `
@@ -73,7 +71,7 @@ Write-Host "Create System User Complete. id: $systemUserId";
 Write-Host "Create System User. applicationId: $identityClientId";
 
 $systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
-	-accessToken $accessToken `
+	-accessToken $environmentAccessToken `
 	-applicationId $identityClientId `
 	-businessUnitId $rootBusinessUnitId `
 	-environmentUrl $environmentUrl `
@@ -83,10 +81,12 @@ $systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
 
 Write-Host "Create System User Complete. id: $systemUserId";
 
+<# test assign role #>
+
 Write-Host 'Associate Role to System User.';
 
-PowerPlatform.SystemUser.AssociateRoles `
-	-accessToken $accessToken `
+PowerPlatform.SystemUser.AssociateRole `
+	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
 	-id $systemUserId `
 	-roleId $basicUserRoleId `
@@ -95,10 +95,12 @@ PowerPlatform.SystemUser.AssociateRoles `
 
 Write-Host 'Associate Role to System User Complete.';
 
+<# test delete if exist #>
+
 Write-Host "Delete System User. id: $systemUserId";
 
-$deleteResult = PowerPlatform.SystemUser.DeleteIfExist `
-	-accessToken $accessToken `
+$deleteResult = PowerPlatform.SystemUser.DisableAndDeleteIfExist `
+	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
 	-id $systemUserId `
 	-ErrorAction:Stop `
@@ -106,13 +108,17 @@ $deleteResult = PowerPlatform.SystemUser.DeleteIfExist `
 
 Write-Host "Delete System User Complete. success: $deleteResult";
 
+<# test delete if not exist #>
+
 Write-Host "Delete System User. id: $systemUserId";
 
-$deleteResult = PowerPlatform.SystemUser.DeleteIfExist `
-	-accessToken $accessToken `
+$deleteResult = PowerPlatform.SystemUser.DisableAndDeleteIfExist `
+	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
 	-id $systemUserId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
 
 Write-Host "Delete System User Complete. success: $deleteResult";
+
+<# end #>

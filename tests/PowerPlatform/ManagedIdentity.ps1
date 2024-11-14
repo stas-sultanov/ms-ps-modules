@@ -3,8 +3,6 @@
 	Run tests related to Managed Identity.
 .DESCRIPTION
 	Connect-AzAccount must be run prior executing this script.
-.PARAMETER applicationId
-	Application (Client) Id of the Azure Managed Identity Resource.
 .PARAMETER environmentUrl
 	Url of the Power Platform Environment.
 	Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
@@ -20,7 +18,7 @@ param
 )
 
 # disable annoying Az warnings
-Update-AzConfig -DisplayBreakingChangeWarning $false;
+$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
 
 # get current script location
 $invocationPath = Split-Path $script:MyInvocation.MyCommand.Path;
@@ -31,18 +29,20 @@ Import-Module (Join-Path $invocationPath '..\..\sources\PowerPlatform\PowerPlatf
 
 Write-Host 'Get access token to access the environment.';
 
-$accessToken = (Get-AzAccessToken -ResourceUrl $environmentUrl -AsSecureString).Token;
+$environmentAccessToken = (Get-AzAccessToken -ResourceUrl $environmentUrl -AsSecureString).Token;
 
 <# test create if not exist #>
 
 Write-Host "Create Managed Identity. applicationId: $identityClientId";
 
 $managedIdentityId = PowerPlatform.ManagedIdentity.CreateIfNotExist `
-	-accessToken $accessToken `
+	-accessToken $environmentAccessToken `
 	-applicationId $identityClientId `
 	-environmentUrl $environmentInfo.url `
-	-id $identityClientId `
-	-tenantId $identityTenantId;
+	-managedIdentityId $identityClientId `
+	-tenantId $identityTenantId `
+	-ErrorAction:Stop `
+	-Verbose:$isVerbose;
 
 Write-Host "Create Managed Identity Complete. id: $managedIdentityId";
 
@@ -51,11 +51,13 @@ Write-Host "Create Managed Identity Complete. id: $managedIdentityId";
 Write-Host "Create Managed Identity. applicationId: $identityClientId";
 
 $managedIdentityId = PowerPlatform.ManagedIdentity.CreateIfNotExist `
-	-accessToken $accessToken `
+	-accessToken $environmentAccessToken `
 	-applicationId $identityClientId `
 	-environmentUrl $environmentInfo.url `
-	-id $identityClientId `
-	-tenantId 'd373a7a9-c9ba-45f8-9f08-ed14a10b4b11';
+	-managedIdentityId $identityClientId `
+	-tenantId $identityTenantId `
+	-ErrorAction:Stop `
+	-Verbose:$isVerbose;
 
 Write-Host "Create Managed Identity Complete. id: $managedIdentityId";
 
@@ -64,9 +66,11 @@ Write-Host "Create Managed Identity Complete. id: $managedIdentityId";
 Write-Host "Delete Managed Identity. id: $managedIdentityId";
 
 $deleteResult = PowerPlatform.ManagedIdentity.DeleteIfExist `
-	-accessToken $accessToken `
+	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentInfo.url `
-	-id $managedIdentityId;
+	-managedIdentityId $managedIdentityId `
+	-ErrorAction:Stop `
+	-Verbose:$isVerbose;
 
 Write-Host "Delete Managed Identity $deleteResult.";
 
@@ -75,8 +79,12 @@ Write-Host "Delete Managed Identity $deleteResult.";
 Write-Host "Delete Managed Identity. id: $managedIdentityId";
 
 $deleteResult = PowerPlatform.ManagedIdentity.DeleteIfExist `
-	-accessToken $accessToken `
+	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentInfo.url `
-	-id $managedIdentityId;
+	-managedIdentityId $managedIdentityId `
+	-ErrorAction:Stop `
+	-Verbose:$isVerbose;
 
 Write-Host "Delete Managed Identity. success: $deleteResult";
+
+<# end #>

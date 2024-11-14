@@ -9,7 +9,7 @@
 param
 (
 	[Parameter(Mandatory = $false)] [Boolean] $isVerbose = $false,
-	[Parameter(Mandatory = $false)] [String]  $settingsFile = 'environment.json'
+	[Parameter(Mandatory = $false)] [String]  $parametersFile = 'environment.json'
 )
 
 # disable annoying Az warnings
