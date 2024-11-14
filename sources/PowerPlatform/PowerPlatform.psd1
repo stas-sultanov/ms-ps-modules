@@ -50,6 +50,7 @@
 		'BusinessUnit.GetRootId',
 		'ManagedIdentity.CreateIfNotExist',
 		'ManagedIdentity.DeleteIfExist',
+		'PluginAssembly.BindManagedIdentity',
 		'Role.GetIdByName',
 		'Solution.Export',
 		'SystemUser.AssociateRole',

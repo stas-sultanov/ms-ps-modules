@@ -519,6 +519,59 @@ function ManagedIdentity.DeleteIfExist
 	}
 }
 
+<# ######################################## #>
+<# Functions to work with Plugin Assemblies #>
+<# ######################################## #>
+
+function PluginAssembly.BindManagedIdentity
+{
+	<#
+	.SYNOPSIS
+		Bind the Plugin Assembly with the Managed Identity.
+	.DESCRIPTION
+		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/pluginassembly
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER apiVersion
+		Version of the Power Platform API to use.
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER managedIdentityId
+		Id of the Managed Identity.
+	.PARAMETER pluginAssemblyId
+		Id of the Plugin Assembly.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	param
+	(
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = 'v9.2',
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $managedIdentityId,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $pluginAssemblyId
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create web request uri
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/pluginassemblies($($pluginAssemblyId))";
+
+		# create web request body
+		$body = @{
+			'managedidentityid@odata.bind' = "/managedidentities($($managedIdentityId))";
+		};
+
+		# invoke web request
+		$null = InvokeWebRequest -accessToken $accessToken -body $body -method Patch -uri $uri -verbose $isVerbose;
+	}
+}
+
 <# ########################### #>
 <# Functions to work with Role #>
 <# ########################### #>
