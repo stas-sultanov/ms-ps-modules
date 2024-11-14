@@ -38,7 +38,7 @@ Write-Host "Create Managed Identity. applicationId: $identityClientId";
 $managedIdentityId = PowerPlatform.ManagedIdentity.CreateIfNotExist `
 	-accessToken $environmentAccessToken `
 	-applicationId $identityClientId `
-	-environmentUrl $environmentInfo.url `
+	-environmentUrl $environmentUrl `
 	-managedIdentityId $identityClientId `
 	-tenantId $identityTenantId `
 	-ErrorAction:Stop `
@@ -53,7 +53,7 @@ Write-Host "Create Managed Identity. applicationId: $identityClientId";
 $managedIdentityId = PowerPlatform.ManagedIdentity.CreateIfNotExist `
 	-accessToken $environmentAccessToken `
 	-applicationId $identityClientId `
-	-environmentUrl $environmentInfo.url `
+	-environmentUrl $environmentUrl `
 	-managedIdentityId $identityClientId `
 	-tenantId $identityTenantId `
 	-ErrorAction:Stop `
@@ -67,7 +67,7 @@ Write-Host "Delete Managed Identity. id: $managedIdentityId";
 
 $deleteResult = PowerPlatform.ManagedIdentity.DeleteIfExist `
 	-accessToken $environmentAccessToken `
-	-environmentUrl $environmentInfo.url `
+	-environmentUrl $environmentUrl `
 	-managedIdentityId $managedIdentityId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
@@ -80,7 +80,7 @@ Write-Host "Delete Managed Identity. id: $managedIdentityId";
 
 $deleteResult = PowerPlatform.ManagedIdentity.DeleteIfExist `
 	-accessToken $environmentAccessToken `
-	-environmentUrl $environmentInfo.url `
+	-environmentUrl $environmentUrl `
 	-managedIdentityId $managedIdentityId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;

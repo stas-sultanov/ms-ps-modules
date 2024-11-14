@@ -45,7 +45,7 @@ Write-Host 'Get Basic User Role Id.';
 $basicUserRoleId = PowerPlatform.Role.GetIdByName `
 	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
-	-name 'Basic User' `
+	-roleName 'Basic User' `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
 
@@ -60,7 +60,7 @@ $systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
 	-applicationId $identityClientId `
 	-businessUnitId $rootBusinessUnitId `
 	-environmentUrl $environmentUrl `
-	-id $identityClientId `
+	-systemUserId $identityClientId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
 
@@ -75,7 +75,7 @@ $systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
 	-applicationId $identityClientId `
 	-businessUnitId $rootBusinessUnitId `
 	-environmentUrl $environmentUrl `
-	-id $identityClientId `
+	-systemUserId $identityClientId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
 
@@ -88,7 +88,7 @@ Write-Host 'Associate Role to System User.';
 PowerPlatform.SystemUser.AssociateRole `
 	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
-	-id $systemUserId `
+	-systemUserId $systemUserId `
 	-roleId $basicUserRoleId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
@@ -102,7 +102,7 @@ Write-Host "Delete System User. id: $systemUserId";
 $deleteResult = PowerPlatform.SystemUser.DisableAndDeleteIfExist `
 	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
-	-id $systemUserId `
+	-systemUserId $systemUserId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
 
@@ -115,7 +115,7 @@ Write-Host "Delete System User. id: $systemUserId";
 $deleteResult = PowerPlatform.SystemUser.DisableAndDeleteIfExist `
 	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
-	-id $systemUserId `
+	-systemUserId $systemUserId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
 

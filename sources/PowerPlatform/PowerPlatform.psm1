@@ -874,7 +874,7 @@ function SystemUser.DisableAndDeleteIfExist
 		}
 
 		# create web request uri
-		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers($($id))";
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/systemusers($($systemUserId))";
 
 		# invoke web request to disable system user
 		$null = InvokeWebRequestAndGetComplete -accessToken $accessToken -body @{ isdisabled = $true } -method Patch -uri $uri -verbose $isVerbose;
