@@ -23,7 +23,6 @@ $EnvironmentApiUri = 'https://api.bap.microsoft.com/providers/Microsoft.Business
 
 $EnvironmentSelect = '$select=properties.linkedEnvironmentMetadata.instanceUrl,properties.azureRegion,properties.linkedEnvironmentMetadata.domainName,name';
 
-
 function Admin.Environment.AddUser
 {
 	<#
@@ -438,7 +437,7 @@ function ManagedIdentity.CreateIfNotExist
 
 		if ($exist)
 		{
-			return $id;
+			return $managedIdentityId;
 		}
 
 		# create web request body
@@ -748,7 +747,7 @@ function SystemUser.CreateIfNotExist
 
 		if ($exist)
 		{
-			return $id;
+			return $systemUserId;
 		}
 
 		# create web request uri
