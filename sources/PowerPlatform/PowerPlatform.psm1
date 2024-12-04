@@ -699,6 +699,80 @@ function Solution.Export
 	}
 }
 
+function Solution.Import
+{
+	<#
+	.SYNOPSIS
+		Import a Solution.
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER apiVersion
+		Version of the Power Platform API to use.
+	.PARAMETER inputFile
+		Path to Zipped solution file. 
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.OUTPUTS
+		Unique identifier of the Import job.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	[OutputType([Guid])]
+	param
+	(
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString]               $accessToken,
+		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]                     $apiVersion = 'v9.2',
+		[Parameter(Mandatory = $true)]  [ValidateNotNull()]        [Dictionary[String, String]] $inputEnvironmentVariables,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]                     $inputFile,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]                        $environmentUrl
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create job id
+		$jobId = [Guid]::NewGuid();
+
+		# read file as byte array
+		$fileAsByteArray = [File]::ReadAllBytes($inputFile);
+
+		# convert file from byte array to base64 string
+		$fileAsString = [Convert]::ToBase64String($fileAsByteArray);
+
+		# create web request uri
+		$uri = [Uri] "$($environmentUrl)api/data/$($apiVersion)/ImportSolution";
+
+		$componentParameters = @();
+
+		foreach ($pair in $inputEnvironmentVariables.GetEnumerator())
+		{
+			$componentParameters += @{
+				'@odata.type' = 'Microsoft.Dynamics.CRM.environmentvariablevalue'
+				schemaname    = $pair.Key
+				value         = $pair.Value
+			}
+		}
+
+		# create web request body
+		$body = @{
+			ComponentParameters              = $componentParameters
+			CustomizationFile                = $fileAsString # this is required value
+			OverwriteUnmanagedCustomizations = $false        # this is required value, we do not expect any unmanaged customizations
+			PublishWorkflows                 = $true         # this is required value
+			ImportJobId                      = $jobId        # this is required value
+		};
+
+		# invoke web request
+		$null = InvokeWebRequest -accessToken $accessToken -body $body -method Post -uri $uri -verbose $isVerbose;
+
+		return $jobId;
+	}
+}
+
 <# ################################## #>
 <# Functions to work with System User #>
 <# ################################## #>
@@ -1091,7 +1165,9 @@ function InvokeWebRequest
 			Write-Host "StatusCode: $([Int32] $_.Exception.Response.StatusCode) ($($_.Exception.Response.StatusCode))";
 
 			# Replaces escaped characters in the JSON
-			[Regex]::Replace($_.ErrorDetails.Message, '\\[Uu]([0-9A-Fa-f]{4})', { [Char]::ToString([Convert]::ToInt32($args[0].Groups[1].Value, 16)) } )
+			$message = [Regex]::Replace($_.ErrorDetails.Message, '\\[Uu]([0-9A-Fa-f]{4})', { [Char]::ToString([Convert]::ToInt32($args[0].Groups[1].Value, 16)) } );
+
+			Write-Host "Message: $message";
 		}
 		catch
 		{
