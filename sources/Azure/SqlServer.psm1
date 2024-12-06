@@ -32,7 +32,7 @@ function Azure.SqlServer.Database.CreateUserForEntraIdentity
 	{
 		# compose command
 		$command =
-@"
+		@"
 	DROP USER IF EXISTS [$databaseUserName]
 
 	CREATE USER [$databaseUserName] FROM EXTERNAL PROVIDER WITH OBJECT_ID='$identityObjectId'
@@ -125,4 +125,3 @@ function Azure.SqlServer.Database.ManageUserAccess
 		Invoke-Sqlcmd -AccessToken $accessToken -Database $databaseName -ServerInstance $serverFQDN -query $command;
 	}
 }
-
