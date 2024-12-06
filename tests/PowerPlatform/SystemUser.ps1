@@ -60,6 +60,7 @@ $systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
 	-applicationId $identityClientId `
 	-businessUnitId $rootBusinessUnitId `
 	-environmentUrl $environmentUrl `
+	-name 'Supper App' `
 	-systemUserId $identityClientId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
@@ -75,6 +76,7 @@ $systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
 	-applicationId $identityClientId `
 	-businessUnitId $rootBusinessUnitId `
 	-environmentUrl $environmentUrl `
+	-name 'Supper App' `
 	-systemUserId $identityClientId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;

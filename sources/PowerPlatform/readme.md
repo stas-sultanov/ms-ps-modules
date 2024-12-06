@@ -6,7 +6,7 @@ The Microsoft Power Platform Powershell module.
 
 ## Purpose
 
-The module has been developed with the purpose to be used for automated management of Power Platform Environments.
+The module has been developed with the purpose to be used for automated management of Power Platform environments.
 
 ## Licensing
 
@@ -18,18 +18,19 @@ The following functions are implemented.
 
 | Name                               | Area               | Description
 | :---                               | :--                | :---
-| Admin.Environment.AddUser          | Environments       | Add an Entra User to the environment.
-| Admin.Environment.Create           | Environments       | Create an environment within the Power Platform tenant.
-| Admin.Environment.Delete           | Environments       | Delete an environment from the Power Platform tenant.
-| Admin.Environment.Retrieve         | Environments       | Retrieve an environment info.
-| Admin.Environment.RetrieveAll      | Environments       | Retrieve information about all accessible environments.
-| Admin.Environment.Update           | Environments       | Update an environment within the Power Platform tenant.
+| Admin.AddUser                      | Environments       | Add an Entra User to the environment.
+| Admin.Create                       | Environments       | Create an environment within the Power Platform tenant.
+| Admin.Delete                       | Environments       | Delete an environment from the Power Platform tenant.
+| Admin.Retrieve                     | Environments       | Retrieve an environment info.
+| Admin.RetrieveAll                  | Environments       | Retrieve information about all accessible environments.
+| Admin.Update                       | Environments       | Update an environment within the Power Platform tenant.
 | BusinessUnit.GetRootId             | Business Units     | Get Id of the root Business Unit within the Power Platform Environment.
 | ManagedIdentity.CreateIfNotExist   | Managed Identities | Create a Managed Identity within the Power Platform Environment.
 | ManagedIdentity.DeleteIfExist      | Managed Identities | Delete a Managed Identity from the Power Platform environment.
 | PluginAssembly.BindManagedIdentity | Plugin Assemblies  | Bind the Plugin Assembly with the Managed Identity.
 | Role.GetIdByName                   | Roles              | Get Id of the Role by Name.
 | Solution.Export                    | Solutions          | Export a Solution.
+| Solution.Import                    | Solutions          | Import a Solution.
 | SystemUser.AssociateRole           | System Users       | Associate roles to the System User.
 | SystemUser.CreateIfNotExist        | System Users       | Create a System User within the Power Platform Environment.
 | SystemUser.DisableAndDeleteIfExist | System Users       | Disable and delete a System User from the Power Platform environment.

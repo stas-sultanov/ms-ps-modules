@@ -41,18 +41,19 @@
 
 	# Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 	FunctionsToExport      = @(
-		'Admin.Environment.AddUser',
-		'Admin.Environment.Create',
-		'Admin.Environment.Delete',
-		'Admin.Environment.Retrieve',
-		'Admin.Environment.RetrieveAll',
-		'Admin.Environment.Update',
+		'Admin.AddUser',
+		'Admin.Create',
+		'Admin.Delete',
+		'Admin.Retrieve',
+		'Admin.RetrieveAll',
+		'Admin.Update',
 		'BusinessUnit.GetRootId',
 		'ManagedIdentity.CreateIfNotExist',
 		'ManagedIdentity.DeleteIfExist',
 		'PluginAssembly.BindManagedIdentity',
 		'Role.GetIdByName',
 		'Solution.Export',
+		'Solution.Import',
 		'SystemUser.AssociateRole',
 		'SystemUser.CreateIfNotExist',
 		'SystemUser.DisableAndDeleteIfExist',
@@ -107,7 +108,7 @@
 	# ProcessorArchitecture = ''
 
 	# Modules that must be imported into the global environment prior to importing this module
-	#RequiredModules = @(@{ModuleName = ""; ModuleVersion = "1.0"; Guid = ""})
+	# RequiredModules = @(@{ModuleName = ""; ModuleVersion = "1.0"; Guid = ""})
 
 	# Script module or binary module file associated with this manifest.
 	RootModule             = 'PowerPlatform.psm1'
@@ -119,5 +120,5 @@
 	# TypesToProcess = @()
 
 	# Variables to export from this module
-	# VariablesToExport = '*'
+	# VariablesToExport      = @();
 }

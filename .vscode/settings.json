@@ -1,0 +1,26 @@
+{
+	"cSpell.words": [
+		"azureactivedirectoryobjectid",
+		"Entra",
+		"environmentvariablevalue",
+		"firstname",
+		"lastname",
+		"pluginassemblies",
+		"roleid",
+		"schemaname"
+	],
+	"editor.detectIndentation": false,
+	"editor.insertSpaces": false,
+	"editor.renderWhitespace": "all",
+	"editor.tabSize": 4,
+	"powershell.codeFormatting.autoCorrectAliases": true,
+	"powershell.codeFormatting.ignoreOneLineBlock": false,
+	"powershell.codeFormatting.openBraceOnSameLine": false,
+	"powershell.codeFormatting.trimWhitespaceAroundPipe": true,
+	"powershell.codeFormatting.useConstantStrings": true,
+	"powershell.codeFormatting.whitespaceBetweenParameters": true,
+	"powershell.developer.editorServicesWaitForDebugger": true,
+	"powershell.integratedConsole.startInBackground": true,
+	"powershell.integratedConsole.startLocation": "Editor",
+	"powershell.pester.useLegacyCodeLens": false
+}

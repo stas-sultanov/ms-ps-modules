@@ -40,6 +40,7 @@ $managedIdentityId = PowerPlatform.ManagedIdentity.CreateIfNotExist `
 	-applicationId $identityClientId `
 	-environmentUrl $environmentUrl `
 	-managedIdentityId $identityClientId `
+	-name 'Test' `
 	-tenantId $identityTenantId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;
@@ -55,6 +56,7 @@ $managedIdentityId = PowerPlatform.ManagedIdentity.CreateIfNotExist `
 	-applicationId $identityClientId `
 	-environmentUrl $environmentUrl `
 	-managedIdentityId $identityClientId `
+	-name 'Test' `
 	-tenantId $identityTenantId `
 	-ErrorAction:Stop `
 	-Verbose:$isVerbose;

@@ -95,4 +95,3 @@ function Azure.DevOps.LoadAsVariables
 		}
 	}
 }
-
