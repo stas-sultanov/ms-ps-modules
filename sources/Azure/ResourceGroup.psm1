@@ -27,7 +27,7 @@ function Azure.ResourceGroup.Provision
 		Copyright © 2024 Stas Sultanov.
 	#>
 
-	[CmdletBinding(DefaultParameterSetName = 'User')]
+	[CmdletBinding()]
 	param
 	(
 		[Parameter(Mandatory = $true)]  [Boolean] $deploymentModeComplete,
@@ -88,7 +88,8 @@ function Azure.ResourceGroup.Remove
 		Copyright © 2024 Stas Sultanov.
 	#>
 
-	[CmdletBinding(DefaultParameterSetName = 'User')]
+	[CmdletBinding()]
+	[OutputType([Void])]
 	param
 	(
 		[Parameter(Mandatory = $true)] [String] $resourceGroupName,
