@@ -19,7 +19,7 @@ function Admin.AddUser
 		Bearer token to access. The token AUD must include 'https://service.powerapps.com/'.
 	.PARAMETER apiVersion
 		Version of the Power Platform API to use.
-	.PARAMETER environmentId
+	.PARAMETER environmentName
 		Id of the Power Platform environment.
 	.PARAMETER userObjectId
 		The ObjectId of a user.
@@ -35,7 +35,7 @@ function Admin.AddUser
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = '2021-04-01',
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $environmentId,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $environmentName,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $userObjectId
 	)
 	process
@@ -47,7 +47,7 @@ function Admin.AddUser
 		$admin = [EnvironmentAdmin]::new($accessToken, $isVerbose);
 
 		# execute
-		$admin.AddUser($apiVersion, $environmentId, $userObjectId);
+		$admin.AddUser($apiVersion, $environmentName, $userObjectId);
 	}
 }
 
@@ -71,7 +71,7 @@ function Admin.Create
 	#>
 
 	[CmdletBinding()]
-	[OutputType([Guid])]
+	[OutputType([String])]
 	param
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
@@ -104,7 +104,7 @@ function Admin.Delete
 		Bearer token to access. The token AUD must include 'https://service.powerapps.com/'.
 	.PARAMETER apiVersion
 		Version of the Power Platform API to use.
-	.PARAMETER environmentId
+	.PARAMETER environmentName
 		Id of the Power Platform environment.
 	.OUTPUTS
 		True if environment deleted, False otherwise.
@@ -118,7 +118,7 @@ function Admin.Delete
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = '2021-04-01',
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $environmentId
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $environmentName
 	)
 	process
 	{
@@ -129,7 +129,7 @@ function Admin.Delete
 		$admin = [EnvironmentAdmin]::new($accessToken, $isVerbose);
 
 		# execute
-		$result = $admin.Delete($apiVersion, $environmentId);
+		$result = $admin.Delete($apiVersion, $environmentName);
 
 		return $result;
 	}
@@ -146,7 +146,7 @@ function Admin.Retrieve
 		Bearer token to access. The token AUD must include 'https://service.powerapps.com/'.
 	.PARAMETER apiVersion
 		Version of the Power Platform API to use.
-	.PARAMETER environmentId
+	.PARAMETER environmentName
 		Id of the Power Platform environment.
 	.OUTPUTS
 		Short information about the environment.
@@ -160,7 +160,7 @@ function Admin.Retrieve
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = '2024-05-01',
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $environmentId
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $environmentName
 	)
 	process
 	{
@@ -171,7 +171,7 @@ function Admin.Retrieve
 		$admin = [EnvironmentAdmin]::new($accessToken, $isVerbose);
 
 		# execute
-		$result = $admin.Retrieve($apiVersion, $environmentId);
+		$result = $admin.Retrieve($apiVersion, $environmentName);
 
 		return $result;
 	}
@@ -227,7 +227,7 @@ function Admin.Update
 		Bearer token to access. The token AUD must include 'https://service.powerapps.com/'.
 	.PARAMETER apiVersion
 		Version of the Power Platform API to use.
-	.PARAMETER environmentId
+	.PARAMETER environmentName
 		Id of the Power Platform environment.
 	.PARAMETER properties
 		Object that contains configuration properties to update the environment.
@@ -241,7 +241,7 @@ function Admin.Update
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
 		[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]       $apiVersion = '2024-05-01',
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $environmentId,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $environmentName,
 		[Parameter(Mandatory = $true)]  [ValidateNotNull()]        [Object]       $properties
 	)
 	process
@@ -253,7 +253,7 @@ function Admin.Update
 		$admin = [EnvironmentAdmin]::new($accessToken, $isVerbose);
 
 		# execute
-		$admin.Update($apiVersion, $environmentId, $properties);
+		$admin.Update($apiVersion, $environmentName, $properties);
 	}
 }
 
@@ -787,7 +787,7 @@ class PowerPlatformEnvironmentInfo
 {
 	[ValidateNotNullOrEmpty()] [String] $azureRegion
 	[ValidateNotNullOrEmpty()] [String] $domainName
-	[ValidateNotNullOrEmpty()] [Guid]   $id
+	[ValidateNotNullOrEmpty()] [String] $name
 	[ValidateNotNullOrEmpty()] [Uri]    $url
 }
 
@@ -888,19 +888,19 @@ class EnvironmentAdmin
 
 	static hidden [Uri] $SelectProjection = '$select=properties.linkedEnvironmentMetadata.instanceUrl,properties.azureRegion,properties.linkedEnvironmentMetadata.domainName,name';
 
-	static hidden [PowerPlatformEnvironmentInfo] CreateEnvironmentInfo([Hashtable] $object)
+	static hidden [PowerPlatformEnvironmentInfo] CreateEnvironmentInfo([Hashtable] $environmentInfo)
 	{
-		$result = [PowerPlatformEnvironmentInfo] {
-			azureRegion = $_.properties.azureRegion
-			domainName = $_.properties.linkedEnvironmentMetadata.domainName
-			id = [Guid] $_.name
-			url = $_.properties.linkedEnvironmentMetadata.instanceUrl
+		$result = [PowerPlatformEnvironmentInfo] @{
+			azureRegion = $environmentInfo.properties.azureRegion
+			domainName  = $environmentInfo.properties.linkedEnvironmentMetadata.domainName
+			name        = $environmentInfo.name
+			url         = $environmentInfo.properties.linkedEnvironmentMetadata.instanceUrl
 		};
 
 		return $result;
 	}
 
-	static hidden [Uri] CreateUri ([String] $apiVersion, [String] $environmentId, [String] $segment, [String] $queryParam)
+	static hidden [Uri] CreateUri ([String] $apiVersion, [String] $environmentName, [String] $segment, [String] $queryParam)
 	{
 		$builder = [UriBuilder]::new([EnvironmentAdmin]::ApiUri);
 
@@ -908,11 +908,11 @@ class EnvironmentAdmin
 
 		$null = $pathBuilder.Append('/scopes/admin/environments');
 
-		if (-not [String]::IsNullOrEmpty($environmentId))
+		if (-not [String]::IsNullOrEmpty($environmentName))
 		{
 			$pathBuilder.Append('/');
 
-			$pathBuilder.Append($environmentId);
+			$pathBuilder.Append($environmentName);
 		}
 
 		if (-not [String]::IsNullOrEmpty($segment))
@@ -943,10 +943,10 @@ class EnvironmentAdmin
 		$this.apiInvoker = [ApiInvoker]::new($accessToken, $isVerbose);
 	}
 
-	[Void] AddUser ([String] $apiVersion, [Guid] $environmentId, [Guid] $userObjectId)
+	[Void] AddUser ([String] $apiVersion, [String] $environmentName, [Guid] $userObjectId)
 	{
 		# create web request uri
-		$uri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentId, 'addUser', $null);
+		$uri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentName, 'addUser', $null);
 
 		# create web request body
 		$body = @{
@@ -957,7 +957,7 @@ class EnvironmentAdmin
 		$null = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
 	}
 
-	[Guid] Create ([String] $apiVersion, [Object] $properties)
+	[String] Create ([String] $apiVersion, [Object] $properties)
 	{
 		# create web request uri
 		$uri = [Uri] "$([EnvironmentAdmin]::ApiUri)/environments?api-version=$($apiVersion)&retainOnProvisionFailure=false";
@@ -969,15 +969,15 @@ class EnvironmentAdmin
 		$response = $this.apiInvoker.InvokeWebRequestAndGetComplete([WebRequestMethod]::Post, $uri, $body);
 
 		# get environment name
-		$result = [Guid] ($response.Content | ConvertFrom-Json -AsHashtable).links.environment.path.Split('/')[4];
+		$result = ($response.Content | ConvertFrom-Json -AsHashtable).links.environment.path.Split('/')[4];
 
 		return $result;
 	}
 
-	[Boolean] Delete ([String] $apiVersion, [Guid] $environmentId)
+	[Boolean] Delete ([String] $apiVersion, [String] $environmentName)
 	{
 		# create validation web request uri
-		$validateUri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentId, 'validateDelete', $null);
+		$validateUri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentName, 'validateDelete', $null);
 
 		# invoke web request to validate deletion
 		$validateResponse = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Post, $validateUri);
@@ -992,7 +992,7 @@ class EnvironmentAdmin
 		}
 
 		# create deletion web request uri
-		$deleteUri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentId, $null, $null);
+		$deleteUri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentName, $null, $null);
 
 		# invoke web request to delete and get to completion
 		$null = $this.apiInvoker.InvokeWebRequestAndGetComplete([WebRequestMethod]::Delete, $deleteUri);
@@ -1000,10 +1000,10 @@ class EnvironmentAdmin
 		return $true;
 	}
 
-	[PowerPlatformEnvironmentInfo] Retrieve ([String] $apiVersion, [Guid] $environmentId)
+	[PowerPlatformEnvironmentInfo] Retrieve ([String] $apiVersion, [String] $environmentName)
 	{
 		# create web request uri
-		$uri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentId, $null, [EnvironmentAdmin]::SelectProjection);
+		$uri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentName, $null, [EnvironmentAdmin]::SelectProjection);
 
 		# invoke web request
 		$response = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Get, $uri);
@@ -1036,10 +1036,10 @@ class EnvironmentAdmin
 		return [PowerPlatformEnvironmentInfo[]] $result;
 	}
 
-	[Void] Update ([String] $apiVersion, [Guid] $environmentId, [Object] $properties)
+	[Void] Update ([String] $apiVersion, [String] $environmentName, [Object] $properties)
 	{
 		# create web request uri
-		$uri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentId, $null, $null);
+		$uri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentName, $null, $null);
 
 		# create web request body
 		$body = @{properties = $properties };

@@ -43,12 +43,7 @@ process
 		-ErrorAction:Stop `
 		-Verbose:$isVerbose;
 
-	if ($null -eq $environmentName)
-	{
-		throw 'Create Environment Fail.';
-	}
-
-	Write-Host "Create Environment Complete. name: $($environmentName)";
+	Write-Host "Create Environment Complete. id: $($environmentName)";
 
 	Write-Host 'Retrieve Environment Info.';
 
@@ -73,14 +68,14 @@ process
 
 	Write-Host 'Look for Environment.';
 
-	$environmentInfo = $environmentInfoList | Where-Object { $_.domainName -eq $environmentInfo.domainName };
+	$searchEnvironmentName = $environmentInfoList | Where-Object { $_.domainName -eq $environmentInfo.domainName } | Select-Object -Property name;
 
-	if ($null -eq $environmentInfo)
+	if ($null -eq $searchEnvironmentName)
 	{
 		throw 'Look for Environment Fail.';
 	}
 
-	Write-Host "Look for Environment Complete. url: $($environmentInfo.url)";
+	Write-Host "Look for Environment Complete.";
 
 	<# test add user #>
 

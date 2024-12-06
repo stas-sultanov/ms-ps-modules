@@ -1,6 +1,6 @@
 @{
 	# Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-	AliasesToExport        = @()
+	# AliasesToExport        = @()
 
 	# Author of this module
 	Author                 = 'Stas Sultanov'
@@ -9,7 +9,7 @@
 	# CLRVersion = ''
 
 	# Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-	CmdletsToExport        = @()
+	# CmdletsToExport        = @()
 
 	# Company or vendor of this module
 	CompanyName            = 'Stas Sultanov'
@@ -30,7 +30,7 @@
 	DotNetFrameworkVersion = '4.0.0.0'
 
 	# DSC resources to export from this module
-	DscResourcesToExport   = @()
+	# DscResourcesToExport   = @()
 
 	# List of all files packaged with this module
 	# When included they are automatically loaded which can pull the files by name from uncontrolled locations.
