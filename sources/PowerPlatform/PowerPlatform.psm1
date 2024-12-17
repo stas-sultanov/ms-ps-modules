@@ -1,6 +1,8 @@
 using namespace System;
 using namespace System.Collections.Generic;
 using namespace System.IO;
+using namespace System.Net;
+using namespace System.Net.Http;
 using namespace System.Text;
 using namespace Microsoft.PowerShell.Commands;
 
@@ -283,8 +285,8 @@ function BusinessUnit.GetRootId
 	[OutputType([Guid])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl
 	)
 	process
 	{
@@ -335,12 +337,12 @@ function ManagedIdentity.CreateIfNotExist
 	[OutputType([Guid])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $applicationId,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $managedIdentityId,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $name,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $tenantId
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $applicationId,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $managedIdentityId,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [String]       $name,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $tenantId
 	)
 	process
 	{
@@ -383,9 +385,9 @@ function ManagedIdentity.DeleteIfExist
 	[OutputType([Boolean])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $managedIdentityId
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $managedIdentityId
 	)
 	process
 	{
@@ -430,10 +432,10 @@ function PluginAssembly.BindManagedIdentity
 	[OutputType([Void])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $managedIdentityId,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $pluginAssemblyId
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $managedIdentityId,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $pluginAssemblyId
 	)
 	process
 	{
@@ -476,9 +478,9 @@ function Role.GetIdByName
 	[OutputType([Guid])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $roleName
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [String]       $roleName
 	)
 	process
 	{
@@ -525,11 +527,11 @@ function Solution.Export
 	[OutputType([Void])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Boolean]      $managed,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $name,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $outputFile
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Boolean]      $managed,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [String]       $name,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [String]       $outputFile
 	)
 	process
 	{
@@ -548,24 +550,30 @@ function Solution.Import
 {
 	<#
 	.SYNOPSIS
-		Import solution.
+		Import a solution.
 	.PARAMETER accessToken
 		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
 	.PARAMETER customizationFile
-		Path to Zipped solution file.
+		Path to Zipped solution file to import.
 	.PARAMETER environmentUrl
 		Url of the Power Platform Environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
 	.PARAMETER environmentVariables
 		Dictionary of environment variables to overwrite values from the solution.
+	.PARAMETER importJobId
+		The ID of the import job that will be created to perform the import.
 	.PARAMETER overwriteUnmanagedCustomizations
 		Indicates whether any unmanaged customizations that have been applied over existing managed solution components should be overwritten.
 	.PARAMETER publishWorkflows
 		Indicates whether any processes (workflows) included in the solution should be activated after they are imported.
+	.PARAMETER skipProductUpdateDependencies
+		Indicates whether enforcement of dependencies related to product updates should be skipped.
+	.PARAMETER stageAndUpgrade
+		No info.
 	.OUTPUTS
 		Unique identifier of the Import job.
 	.NOTES
-		Created by Stas Sultanov. https://www.linkedin.com/in/stas-sultanov/
+		Copyright © 2024 Stas Sultanov.
 	#>
 
 	[CmdletBinding()]
@@ -575,9 +583,13 @@ function Solution.Import
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString]               $accessToken,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]                     $customizationFile,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]                        $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNull()]        [Dictionary[String, String]] $environmentVariables,
+		[Parameter(Mandatory = $false)]                            [Dictionary[String, String]] $environmentVariables = $null,
+		[Parameter(Mandatory = $false)]                            [Nullable[Boolean]]          $holdingSolution = $null,
+		[Parameter(Mandatory = $true)]                             [Guid]                       $importJobId,
 		[Parameter(Mandatory = $true)]                             [Boolean]                    $overwriteUnmanagedCustomizations,
-		[Parameter(Mandatory = $true)]                             [Boolean]                    $publishWorkflows
+		[Parameter(Mandatory = $true)]                             [Boolean]                    $publishWorkflows,
+		[Parameter(Mandatory = $false)]                            [Nullable[Boolean]]          $skipProductUpdateDependencies = $null,
+		[Parameter(Mandatory = $false)]                            [Nullable[Boolean]]          $stageAndUpgrade = $null
 	)
 	process
 	{
@@ -588,7 +600,57 @@ function Solution.Import
 		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
 
 		# execute
-		$result = $manager.Solution_Import($customizationFile, $environmentVariables, $overwriteUnmanagedCustomizations, $publishWorkflows);
+		$result = $manager.Solution_Import($customizationFile, $environmentVariables, $holdingSolution, $importJobId, $overwriteUnmanagedCustomizations, $publishWorkflows, $skipProductUpdateDependencies, $stageAndUpgrade);
+
+		return $result;
+	}
+}
+
+function Solution.StageAndUpgrade
+{
+	<#
+	.SYNOPSIS
+		Import a solution, stage it for upgrade, and apply the upgrade as the default (when applicable).
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER customizationFile
+		Path to Zipped solution file to import.
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER environmentVariables
+		Dictionary of environment variables to overwrite values from the solution.
+	.PARAMETER overwriteUnmanagedCustomizations
+		Indicates whether any unmanaged customizations that have been applied over existing managed solution components should be overwritten.
+	.PARAMETER publishWorkflows
+		Indicates whether any processes (workflows) included in the solution should be activated after they are imported.
+	.OUTPUTS
+		The unique identifier of the staged solution.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	[OutputType([Guid])]
+	param
+	(
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString]               $accessToken,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]                     $customizationFile,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]                        $environmentUrl,
+		[Parameter(Mandatory = $false)] [ValidateNotNull()]        [Dictionary[String, String]] $environmentVariables = [Dictionary[String, String]]::new(),
+		[Parameter(Mandatory = $false)]                            [Boolean]                    $overwriteUnmanagedCustomizations = $true,
+		[Parameter(Mandatory = $false)]                            [Boolean]                    $publishWorkflows = $true
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create environment manager
+		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
+
+		# execute
+		$result = $manager.Solution_StageAndUpgrade($customizationFile, $environmentVariables, $overwriteUnmanagedCustomizations, $publishWorkflows);
 
 		return $result;
 	}
@@ -622,10 +684,10 @@ function SystemUser.AssociateRole
 	[OutputType([Void])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $roleId,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $systemUserId
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $roleId,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $systemUserId
 	)
 	process
 	{
@@ -671,12 +733,12 @@ function SystemUser.CreateIfNotExist
 	[OutputType([Guid])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $applicationId,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $businessUnitId,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]       $name,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $systemUserId
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $applicationId,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $businessUnitId,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [String]       $name,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $systemUserId
 	)
 	process
 	{
@@ -717,9 +779,9 @@ function SystemUser.DisableAndDeleteIfExist
 	[OutputType([Boolean])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $systemUserId
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $systemUserId
 	)
 	process
 	{
@@ -760,9 +822,9 @@ function SystemUser.GetIdByEntraObjectId
 	[OutputType([Guid])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Guid]         $objectId
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $objectId
 	)
 	process
 	{
@@ -791,23 +853,33 @@ class PowerPlatformEnvironmentInfo
 	[ValidateNotNullOrEmpty()] [Uri]    $url
 }
 
-class ApiInvoker
+class PowerPlatformClient
 {
 	hidden [SecureString] $accessToken;
 	hidden [Boolean]      $isVerbose;
 
-	ApiInvoker ([SecureString] $accessToken, [Boolean] $isVerbose = $false)
+	PowerPlatformClient (
+		[SecureString] $accessToken,
+		[Boolean] $isVerbose
+	)
 	{
 		$this.accessToken = $accessToken;
 		$this.isVerbose = $isVerbose;
 	}
 
-	[WebResponseObject] InvokeWebRequestAndGetComplete ([WebRequestMethod] $method, [Uri] $uri)
+	[WebResponseObject] InvokeWebRequestAndGetComplete (
+		[WebRequestMethod] $method,
+		[Uri] $uri
+	)
 	{
 		return $this.InvokeWebRequestAndGetComplete($method, $uri, $null);
 	}
 
-	[WebResponseObject] InvokeWebRequestAndGetComplete ([WebRequestMethod] $method, [Uri] $uri, [Object] $body)
+	[WebResponseObject] InvokeWebRequestAndGetComplete (
+		[WebRequestMethod] $method,
+		[Uri] $uri,
+		[Object] $body
+	)
 	{
 		# invoke web request to get operation status uri
 		$response = $this.InvokeWebRequest($method, $uri, $body);
@@ -841,12 +913,19 @@ class ApiInvoker
 		return $response;
 	}
 
-	[WebResponseObject] InvokeWebRequest ([WebRequestMethod] $method, [Uri] $uri)
+	[WebResponseObject] InvokeWebRequest (
+		[WebRequestMethod] $method,
+		[Uri] $uri
+	)
 	{
 		return $this.InvokeWebRequest($method, $uri, $null);
 	}
 
-	[WebResponseObject] InvokeWebRequest ([WebRequestMethod] $method, [Uri] $uri, [Object] $body)
+	[WebResponseObject] InvokeWebRequest (
+		[WebRequestMethod] $method,
+		[Uri] $uri,
+		[Object] $body
+	)
 	{
 		try
 		{
@@ -863,21 +942,27 @@ class ApiInvoker
 		}
 		catch [HttpResponseException]
 		{
-			Write-Host 'An error occurred calling the Power Platform:' -ForegroundColor Red;
+			Write-Host 'An error occurred calling the Power Platform' -ForegroundColor Red;
+
+			Write-Host "Message: $($_.Exception.Message)";
 
 			$response = $_.Exception.Response;
 
-			Write-Host "StatusCode: $([Int32] $response.StatusCode) ($($response.StatusCode))";
+			Write-Host "StatusCode: $([Int32] $response.StatusCode) ($($response.ReasonPhrase))";
 
-			# Replaces escaped characters in the JSON
-			$message = [Regex]::Replace($_.ErrorDetails.Message, '\\[Uu]([0-9A-Fa-f]{4})',
-				{
-					[Char]::ToString([Convert]::ToInt32($args[0].Groups[1].Value, 16))
-				} );
+			throw $_.Exception;
+		}
+		catch [HttpRequestException]
+		{
+			Write-Host 'An error occurred calling the Power Platform' -ForegroundColor Red;
 
-			Write-Host "Message: $message";
+			Write-Host "Message: $($_.Exception.Message)";
 
-			return $response;
+			$response = $_.Exception.Response;
+
+			Write-Host "StatusCode: $([Int32] $response.StatusCode) ($($response.ReasonPhrase))";
+
+			throw $_.Exception;
 		}
 	}
 }
@@ -888,7 +973,9 @@ class EnvironmentAdmin
 
 	static hidden [Uri] $SelectProjection = '$select=properties.linkedEnvironmentMetadata.instanceUrl,properties.azureRegion,properties.linkedEnvironmentMetadata.domainName,name';
 
-	static hidden [PowerPlatformEnvironmentInfo] CreateEnvironmentInfo([Hashtable] $environmentInfo)
+	static hidden [PowerPlatformEnvironmentInfo] CreateEnvironmentInfo(
+		[Hashtable] $environmentInfo
+	)
 	{
 		$result = [PowerPlatformEnvironmentInfo] @{
 			azureRegion = $environmentInfo.properties.azureRegion
@@ -900,7 +987,12 @@ class EnvironmentAdmin
 		return $result;
 	}
 
-	static hidden [Uri] CreateUri ([String] $apiVersion, [String] $environmentName, [String] $segment, [String] $queryParam)
+	static hidden [Uri] CreateUri (
+		[String] $apiVersion,
+		[String] $environmentName,
+		[String] $segment,
+		[String] $queryParam
+	)
 	{
 		$builder = [UriBuilder]::new([EnvironmentAdmin]::ApiUri);
 
@@ -936,14 +1028,21 @@ class EnvironmentAdmin
 		return $builder.Uri;
 	}
 
-	hidden [ApiInvoker] $apiInvoker;
+	hidden [PowerPlatformClient] $client;
 
-	EnvironmentAdmin ([SecureString] $accessToken, [Boolean] $isVerbose)
+	EnvironmentAdmin (
+		[SecureString] $accessToken,
+		[Boolean] $isVerbose
+	)
 	{
-		$this.apiInvoker = [ApiInvoker]::new($accessToken, $isVerbose);
+		$this.client = [PowerPlatformClient]::new($accessToken, $isVerbose);
 	}
 
-	[Void] AddUser ([String] $apiVersion, [String] $environmentName, [Guid] $userObjectId)
+	[Void] AddUser (
+		[String] $apiVersion,
+		[String] $environmentName,
+		[Guid] $userObjectId
+	)
 	{
 		# create web request uri
 		$uri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentName, 'addUser', $null);
@@ -954,10 +1053,13 @@ class EnvironmentAdmin
 		};
 
 		# invoke web request
-		$null = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
+		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
 	}
 
-	[String] Create ([String] $apiVersion, [Object] $properties)
+	[String] Create (
+		[String] $apiVersion,
+		[Object] $properties
+	)
 	{
 		# create web request uri
 		$uri = [Uri] "$([EnvironmentAdmin]::ApiUri)/environments?api-version=$($apiVersion)&retainOnProvisionFailure=false";
@@ -966,7 +1068,7 @@ class EnvironmentAdmin
 		$body = @{properties = $properties };
 
 		# invoke web request
-		$response = $this.apiInvoker.InvokeWebRequestAndGetComplete([WebRequestMethod]::Post, $uri, $body);
+		$response = $this.client.InvokeWebRequestAndGetComplete([WebRequestMethod]::Post, $uri, $body);
 
 		# get environment name
 		$result = ($response.Content | ConvertFrom-Json -AsHashtable).links.environment.path.Split('/')[4];
@@ -974,13 +1076,16 @@ class EnvironmentAdmin
 		return $result;
 	}
 
-	[Boolean] Delete ([String] $apiVersion, [String] $environmentName)
+	[Boolean] Delete (
+		[String] $apiVersion,
+		[String] $environmentName
+	)
 	{
 		# create validation web request uri
 		$validateUri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentName, 'validateDelete', $null);
 
 		# invoke web request to validate deletion
-		$validateResponse = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Post, $validateUri);
+		$validateResponse = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $validateUri);
 
 		# get validation response content
 		$validateResponseContent = $validateResponse.Content | ConvertFrom-Json -AsHashtable;
@@ -995,18 +1100,21 @@ class EnvironmentAdmin
 		$deleteUri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentName, $null, $null);
 
 		# invoke web request to delete and get to completion
-		$null = $this.apiInvoker.InvokeWebRequestAndGetComplete([WebRequestMethod]::Delete, $deleteUri);
+		$null = $this.client.InvokeWebRequestAndGetComplete([WebRequestMethod]::Delete, $deleteUri);
 
 		return $true;
 	}
 
-	[PowerPlatformEnvironmentInfo] Retrieve ([String] $apiVersion, [String] $environmentName)
+	[PowerPlatformEnvironmentInfo] Retrieve (
+		[String] $apiVersion,
+		[String] $environmentName
+	)
 	{
 		# create web request uri
 		$uri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentName, $null, [EnvironmentAdmin]::SelectProjection);
 
 		# invoke web request
-		$response = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Get, $uri);
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Get, $uri);
 
 		# convert config response content
 		$environment = $response.Content | ConvertFrom-Json -AsHashtable;
@@ -1017,13 +1125,15 @@ class EnvironmentAdmin
 		return $result;
 	}
 
-	[PowerPlatformEnvironmentInfo[]] RetrieveAll ([String] $apiVersion)
+	[PowerPlatformEnvironmentInfo[]] RetrieveAll (
+		[String] $apiVersion
+	)
 	{
 		# create web request uri
 		$uri = [EnvironmentAdmin]::CreateUri($apiVersion, $null, $null, [EnvironmentAdmin]::SelectProjection);
 
 		# invoke web request | OData $filter does not work :(
-		$response = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Get, $uri);
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Get, $uri);
 
 		# convert content
 		$environmentList = ($response.Content | ConvertFrom-Json -AsHashtable).value;
@@ -1036,7 +1146,11 @@ class EnvironmentAdmin
 		return [PowerPlatformEnvironmentInfo[]] $result;
 	}
 
-	[Void] Update ([String] $apiVersion, [String] $environmentName, [Object] $properties)
+	[Void] Update (
+		[String] $apiVersion,
+		[String] $environmentName,
+		[Object] $properties
+	)
 	{
 		# create web request uri
 		$uri = [EnvironmentAdmin]::CreateUri($apiVersion, $environmentName, $null, $null);
@@ -1045,7 +1159,7 @@ class EnvironmentAdmin
 		$body = @{properties = $properties };
 
 		# invoke web request
-		$null = $this.apiInvoker.InvokeWebRequestAndGetComplete([WebRequestMethod]::Patch, $uri, $body);
+		$null = $this.client.InvokeWebRequestAndGetComplete([WebRequestMethod]::Patch, $uri, $body);
 	}
 }
 
@@ -1053,17 +1167,24 @@ class EnvironmentManager
 {
 	static [String] $ApiVersion = 'v9.2';
 
-	hidden [Uri]        $environmentUrl;
-	hidden [ApiInvoker] $apiInvoker;
+	hidden [Uri] $environmentUrl;
+	hidden [PowerPlatformClient] $client;
 
-	EnvironmentManager ([SecureString] $accessToken, [Uri] $environmentUrl, [Boolean] $isVerbose = $false)
+	EnvironmentManager (
+		[SecureString] $accessToken,
+		[Uri] $environmentUrl,
+		[Boolean] $isVerbose
+	)
 	{
-		$this.apiInvoker = [ApiInvoker]::new($accessToken, $isVerbose);
+		$this.client = [PowerPlatformClient]::new($accessToken, $isVerbose);
 
 		$this.environmentUrl = $environmentUrl;
 	}
 
-	[WebResponseObject] InvokeGet ([String] $segment, [String] $query = $null)
+	[WebResponseObject] InvokeGet (
+		[String] $segment,
+		[String] $query = $null
+	)
 	{
 		# create web request uri
 		$uri = CreateUri($segment, $query);
@@ -1074,7 +1195,10 @@ class EnvironmentManager
 		return $result;
 	}
 
-	[Uri] CreateUri ([String] $segment, [String] $query)
+	[Uri] CreateUri (
+		[String] $segment,
+		[String] $query
+	)
 	{
 		$builder = [UriBuilder]::new($this.environmentUrl);
 
@@ -1104,7 +1228,7 @@ class EnvironmentManager
 		$uri = $this.CreateUri('businessunits', '%24select=businessunitid&%24filter=_parentbusinessunitid_value%20eq%20null');
 
 		# invoke web request
-		$response = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Get, $uri);
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Get, $uri);
 
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
@@ -1115,7 +1239,12 @@ class EnvironmentManager
 		return $result;
 	}
 
-	[Guid] ManagedIdentity_CreateIfNotExist ([Guid] $managedIdentityId, [Guid] $applicationId, [String] $name, [Guid] $tenantId)
+	[Guid] ManagedIdentity_CreateIfNotExist (
+		[Guid] $managedIdentityId,
+		[Guid] $applicationId,
+		[String] $name,
+		[Guid] $tenantId
+	)
 	{
 		# check if managed identity exist
 		$exist = $this.ManagedIdentity_Exist($managedIdentityId);
@@ -1139,7 +1268,7 @@ class EnvironmentManager
 		$uri = $this.CreateUri('managedidentities', $null);
 
 		# invoke web request
-		$response = $this.apiInvoker.InvokeWebRequestAndGetComplete([WebRequestMethod]::Post, $uri, $body);
+		$response = $this.client.InvokeWebRequestAndGetComplete([WebRequestMethod]::Post, $uri, $body);
 
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
@@ -1150,7 +1279,9 @@ class EnvironmentManager
 		return $result;
 	}
 
-	[Boolean] ManagedIdentity_DeleteIfExist ([Guid] $managedIdentityId)
+	[Boolean] ManagedIdentity_DeleteIfExist (
+		[Guid] $managedIdentityId
+	)
 	{
 		# check if identity exist
 		$exist = $this.ManagedIdentity_Exist($managedIdentityId);
@@ -1164,18 +1295,20 @@ class EnvironmentManager
 		$uri = $this.CreateUri("managedidentities($($managedIdentityId))", $null);
 
 		# invoke web request
-		$null = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Delete, $uri);
+		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Delete, $uri);
 
 		return $true;
 	}
 
-	[Boolean] ManagedIdentity_Exist ([Guid] $managedIdentityId)
+	[Boolean] ManagedIdentity_Exist (
+		[Guid] $managedIdentityId
+	)
 	{
 		# create web request uri
 		$uri = $this.CreateUri('managedidentities', "`$select=managedidentityid&`$filter=managedidentityid eq '$($managedIdentityId)'");
 
 		# invoke web request
-		$response = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Get, $uri);
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Get, $uri);
 
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
@@ -1188,7 +1321,10 @@ class EnvironmentManager
 		return $false;
 	}
 
-	[Void] PluginAssembly_BindManagedIdentity ([Guid] $pluginAssemblyId, [Guid] $managedIdentityId)
+	[Void] PluginAssembly_BindManagedIdentity (
+		[Guid] $pluginAssemblyId,
+		[Guid] $managedIdentityId
+	)
 	{
 		# create web request uri
 		$uri = $this.CreateUri("pluginassemblies($($pluginAssemblyId))", $null);
@@ -1199,16 +1335,18 @@ class EnvironmentManager
 		};
 
 		# invoke web request
-		$null = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Patch, $uri, $body);
+		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Patch, $uri, $body);
 	}
 
-	[Guid] Role_GetIdByName ([String] $roleName)
+	[Guid] Role_GetIdByName (
+		[String] $roleName
+	)
 	{
 		# create web request uri
 		$uri = $this.CreateUri('roles', "`$select=roleid&`$filter=name eq '$($roleName)'");
 
 		# invoke web request
-		$response = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Get, $uri);
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Get, $uri);
 
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
@@ -1224,7 +1362,11 @@ class EnvironmentManager
 		return $result;
 	}
 
-	[Void] Solution_Export ([Boolean] $managed, [String] $name, [String] $outputFile)
+	[Void] Solution_Export (
+		[Boolean] $managed,
+		[String] $name,
+		[String] $outputFile
+	)
 	{
 		# create web request uri
 		$uri = $this.CreateUri('ExportSolution', $null);
@@ -1236,7 +1378,7 @@ class EnvironmentManager
 		};
 
 		# invoke web request
-		$response = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
 
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
@@ -1248,7 +1390,65 @@ class EnvironmentManager
 		[File]::WriteAllBytes($outputFile, $fileAsByteArray);
 	}
 
-	[Guid] Solution_Import ([Dictionary[String, String]] $environmentVariables, [String] $customizationFile, [Boolean] $overwriteUnmanagedCustomizations, [Boolean] $publishWorkflows)
+	[void] Solution_Import (
+		[String]                     $customizationFile,
+		[Dictionary[String, String]] $environmentVariables,
+		[Nullable[Boolean]]          $holdingSolution,
+		[Guid]                       $importJobId,
+		[Boolean]                    $overwriteUnmanagedCustomizations,
+		[Boolean]                    $publishWorkflows,
+		[Nullable[Boolean]]          $skipProductUpdateDependencies,
+		[Nullable[Boolean]]          $stageAndUpgrade
+	)
+	{
+		# read file as byte array
+		$customizationFileAsByteArray = [File]::ReadAllBytes($customizationFile);
+
+		# convert file from byte array to base64 string
+		$customizationFileAsString = [Convert]::ToBase64String($customizationFileAsByteArray);
+
+		$componentParameters = $null;
+
+		if (($null -ne $environmentVariables) -and ($environmentVariables.Count -ge 0))
+		{
+			$componentParameters = @();
+
+			foreach ($pair in $environmentVariables.GetEnumerator())
+			{
+				$componentParameters += @{
+					'@odata.type' = 'Microsoft.Dynamics.CRM.environmentvariablevalue'
+					schemaname    = $pair.Key
+					value         = $pair.Value
+				}
+			}
+		}
+
+		# create web request uri
+		$uri = $this.CreateUri('ImportSolution', $null);
+
+		# must set to null otherwise 500 Internal Error
+		if (0 -eq $componentParameters.Length)
+		{
+			$componentParameters = $null;
+		}
+
+		# create web request body
+		$body = @{
+			ComponentParameters              = $componentParameters
+			CustomizationFile                = $customizationFileAsString
+			HoldingSolution                  = $holdingSolution
+			OverwriteUnmanagedCustomizations = $overwriteUnmanagedCustomizations
+			PublishWorkflows                 = $publishWorkflows
+			SkipProductUpdateDependencies    = $skipProductUpdateDependencies
+			StageAndUpgrade                  = $stageAndUpgrade
+			ImportJobId                      = $importJobId
+		};
+
+		# invoke web request
+		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
+	}
+
+	[Guid] Solution_StageAndUpgrade ([String] $customizationFile, [Dictionary[String, String]] $environmentVariables, [Boolean] $overwriteUnmanagedCustomizations, [Boolean] $publishWorkflows)
 	{
 		# create import job id
 		$importJobId = [Guid]::NewGuid();
@@ -1271,7 +1471,15 @@ class EnvironmentManager
 		}
 
 		# create web request uri
-		$uri = $this.CreateUri('ImportSolution', $null);
+		$uri = $this.CreateUri('StageAndUpgrade', $null);
+
+		# must set to null otherwise 500 Internal Error
+		if (0 -eq $componentParameters.Length)
+		{
+			$componentParameters = $null;
+		}
+
+		$importJobId = [Guid]::NewGuid();
 
 		# create web request body
 		$body = @{
@@ -1283,9 +1491,15 @@ class EnvironmentManager
 		};
 
 		# invoke web request
-		$null = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
 
-		return $importJobId;
+		# convert response content
+		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
+
+		# create result from response
+		$result = $responseContent.SolutionId;
+
+		return $result;
 	}
 
 	[Void] SystemUser_AssociateRole ([Guid] $systemUserId, [Guid] $roleId)
@@ -1299,7 +1513,7 @@ class EnvironmentManager
 		};
 
 		# invoke web request
-		$null = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
+		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
 	}
 
 	[Guid] SystemUser_CreateIfNotExist ([Guid] $systemUserId, [Guid] $applicationId, [Guid] $businessUnitId, [String] $name)
@@ -1326,7 +1540,7 @@ class EnvironmentManager
 		};
 
 		# invoke web request
-		$response = $this.apiInvoker.InvokeWebRequestAndGetComplete([WebRequestMethod]::Post, $uri, $body);
+		$response = $this.client.InvokeWebRequestAndGetComplete([WebRequestMethod]::Post, $uri, $body);
 
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
@@ -1355,13 +1569,13 @@ class EnvironmentManager
 		};
 
 		# invoke web request to disable system user
-		$null = $this.apiInvoker.InvokeWebRequestAndGetComplete([WebRequestMethod]::Patch, $uri, $body);
+		$null = $this.client.InvokeWebRequestAndGetComplete([WebRequestMethod]::Patch, $uri, $body);
 
 		# invoke web request to change state to deleted
-		$null = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Delete, $uri);
+		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Delete, $uri);
 
 		# invoke web request to delete system user
-		$null = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Delete, $uri);
+		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Delete, $uri);
 
 		return $true;
 	}
@@ -1372,7 +1586,7 @@ class EnvironmentManager
 		$uri = $this.CreateUri('systemusers', "`$select=systemuserid&`$filter=systemuserid eq '$($systemUserId)'");
 
 		# invoke web request
-		$response = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Get, $uri);
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Get, $uri);
 
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
@@ -1391,7 +1605,7 @@ class EnvironmentManager
 		$uri = $this.CreateUri('systemusers', "`$select=systemuserid&`$filter=azureactivedirectoryobjectid eq '$($objectId)'");
 
 		# invoke web request
-		$response = $this.apiInvoker.InvokeWebRequest([WebRequestMethod]::Get, $uri);
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Get, $uri);
 
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;

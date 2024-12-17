@@ -54,6 +54,7 @@
 		'Role.GetIdByName',
 		'Solution.Export',
 		'Solution.Import',
+		'Solution.StageAndUpgrade',
 		'SystemUser.AssociateRole',
 		'SystemUser.CreateIfNotExist',
 		'SystemUser.DisableAndDeleteIfExist',
