@@ -259,6 +259,52 @@ function Admin.Update
 	}
 }
 
+<# ####################################### #>
+<# Functions to work with Async Operations #>
+<# ####################################### #>
+
+function AsyncOperation.Await
+{
+	<#
+	.SYNOPSIS
+		Await completion of the Async Opertion.
+	.DESCRIPTION
+		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/businessunit
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.OUTPUTS
+		Business Unit Id.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	[OutputType([Boolean])]
+	param
+	(
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $asyncOperationId,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create environment manager
+		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
+
+		# execute
+		$result = $manager.AsyncOperation_Await($asyncOperationId);
+
+		return $result;
+	}
+}
+
+
 <# ##################################### #>
 <# Functions to work with Business Units #>
 <# ##################################### #>
@@ -546,15 +592,13 @@ function Solution.Export
 	}
 }
 
-function Solution.Import
+function Solution.ImportAsync
 {
 	<#
 	.SYNOPSIS
-		Import a solution.
+		Import a solution using an asynchronous job.
 	.PARAMETER accessToken
 		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER customizationFile
-		Path to Zipped solution file to import.
 	.PARAMETER environmentUrl
 		Url of the Power Platform Environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
@@ -562,18 +606,14 @@ function Solution.Import
 		Dictionary of environment variables to overwrite values from the solution.
 	.PARAMETER holdingSolution
 		Import solution as holding solution staged for upgrade.
-	.PARAMETER importJobId
-		The ID of the import job that will be created to perform the import.
 	.PARAMETER overwriteUnmanagedCustomizations
 		Indicates whether any unmanaged customizations that have been applied over existing managed solution components should be overwritten.
 	.PARAMETER publishWorkflows
 		Indicates whether any processes (workflows) included in the solution should be activated after they are imported.
-	.PARAMETER skipProductUpdateDependencies
-		Indicates whether enforcement of dependencies related to product updates should be skipped.
-	.PARAMETER stageAndUpgrade
-		No info.
+	.PARAMETER stageSolutionUploadId
+		The unique identifier (ID) of the solution uploaded during the StageSolution call.
 	.OUTPUTS
-		Unique identifier of the Import job.
+		The unique identifier (ID) of the asynchronous operation for the solution import.
 	.NOTES
 		Copyright © 2024 Stas Sultanov.
 	#>
@@ -583,15 +623,12 @@ function Solution.Import
 	param
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString]               $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]                     $customizationFile,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]                        $environmentUrl,
 		[Parameter(Mandatory = $false)]                            [Dictionary[String, String]] $environmentVariables = $null,
 		[Parameter(Mandatory = $false)]                            [Nullable[Boolean]]          $holdingSolution = $null,
-		[Parameter(Mandatory = $true)]                             [Guid]                       $importJobId,
 		[Parameter(Mandatory = $true)]                             [Boolean]                    $overwriteUnmanagedCustomizations,
 		[Parameter(Mandatory = $true)]                             [Boolean]                    $publishWorkflows,
-		[Parameter(Mandatory = $false)]                            [Nullable[Boolean]]          $skipProductUpdateDependencies = $null,
-		[Parameter(Mandatory = $false)]                            [Nullable[Boolean]]          $stageAndUpgrade = $null
+		[Parameter(Mandatory = $true)]                             [Guid]                       $stageSolutionUploadId
 	)
 	process
 	{
@@ -602,7 +639,7 @@ function Solution.Import
 		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
 
 		# execute
-		$result = $manager.Solution_Import($customizationFile, $environmentVariables, $holdingSolution, $importJobId, $overwriteUnmanagedCustomizations, $publishWorkflows, $skipProductUpdateDependencies, $stageAndUpgrade);
+		$result = $manager.Solution_ImportAsync($environmentVariables, $holdingSolution, $overwriteUnmanagedCustomizations, $publishWorkflows, $stageSolutionUploadId);
 
 		return $result;
 	}
@@ -612,7 +649,7 @@ function Solution.Stage
 {
 	<#
 	.SYNOPSIS
-		Import a solution.
+		Stage the solution for upgrade.
 	.PARAMETER accessToken
 		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
 	.PARAMETER customizationFile
@@ -621,13 +658,13 @@ function Solution.Stage
 		Url of the Power Platform Environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
 	.OUTPUTS
-		Unique identifier of the Import job.
+		An object that contains information of staging a solution.
 	.NOTES
 		Copyright © 2024 Stas Sultanov.
 	#>
 
 	[CmdletBinding()]
-	[OutputType([Guid])]
+	[OutputType([SolutionStageInfo])]
 	param
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString]               $accessToken,
@@ -643,7 +680,7 @@ function Solution.Stage
 		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
 
 		# execute
-		$result = $manager.Stage($customizationFile);
+		$result = $manager.Solution_Stage($customizationFile);
 
 		return $result;
 	}
@@ -700,6 +737,47 @@ function Solution.StageAndUpgrade
 
 		# execute
 		$result = $manager.Solution_StageAndUpgrade($customizationFile, $environmentVariables, $overwriteUnmanagedCustomizations, $publishWorkflows);
+
+		return $result;
+	}
+}
+
+function Solution.UninstallAsync
+{
+	<#
+	.SYNOPSIS
+		Uninstalls a solution using an asynchronous job.
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER solutionUniqueName
+		The unique name of the solution.
+	.OUTPUTS
+		The unique identifier (ID) of the asynchronous job that uninstalls the solution.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	[OutputType([Guid])]
+	param
+	(
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [String]       $solutionUniqueName
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create environment manager
+		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
+
+		# execute
+		$result = $manager.Solution_UninstallAsync($solutionUniqueName);
 
 		return $result;
 	}
@@ -918,7 +996,7 @@ class PowerPlatformClient
 
 	[WebResponseObject] InvokeWebRequestAndGetComplete (
 		[WebRequestMethod] $method,
-		[Uri] $uri
+		[Uri]              $uri
 	)
 	{
 		return $this.InvokeWebRequestAndGetComplete($method, $uri, $null);
@@ -926,8 +1004,8 @@ class PowerPlatformClient
 
 	[WebResponseObject] InvokeWebRequestAndGetComplete (
 		[WebRequestMethod] $method,
-		[Uri] $uri,
-		[Object] $body
+		[Uri]              $uri,
+		[Object]           $body
 	)
 	{
 		# invoke web request to get operation status uri
@@ -964,7 +1042,7 @@ class PowerPlatformClient
 
 	[WebResponseObject] InvokeWebRequest (
 		[WebRequestMethod] $method,
-		[Uri] $uri
+		[Uri]              $uri
 	)
 	{
 		return $this.InvokeWebRequest($method, $uri, $null);
@@ -972,8 +1050,8 @@ class PowerPlatformClient
 
 	[WebResponseObject] InvokeWebRequest (
 		[WebRequestMethod] $method,
-		[Uri] $uri,
-		[Object] $body
+		[Uri]              $uri,
+		[Object]           $body
 	)
 	{
 		try
@@ -1081,7 +1159,7 @@ class EnvironmentAdmin
 
 	EnvironmentAdmin (
 		[SecureString] $accessToken,
-		[Boolean] $isVerbose
+		[Boolean]      $isVerbose
 	)
 	{
 		$this.client = [PowerPlatformClient]::new($accessToken, $isVerbose);
@@ -1090,7 +1168,7 @@ class EnvironmentAdmin
 	[Void] AddUser (
 		[String] $apiVersion,
 		[String] $environmentName,
-		[Guid] $userObjectId
+		[Guid]   $userObjectId
 	)
 	{
 		# create web request uri
@@ -1221,27 +1299,13 @@ class EnvironmentManager
 
 	EnvironmentManager (
 		[SecureString] $accessToken,
-		[Uri] $environmentUrl,
-		[Boolean] $isVerbose
+		[Uri]          $environmentUrl,
+		[Boolean]      $isVerbose
 	)
 	{
 		$this.client = [PowerPlatformClient]::new($accessToken, $isVerbose);
 
 		$this.environmentUrl = $environmentUrl;
-	}
-
-	[WebResponseObject] InvokeGet (
-		[String] $segment,
-		[String] $query = $null
-	)
-	{
-		# create web request uri
-		$uri = CreateUri($segment, $query);
-
-		# invoke web request
-		$result = InvokeWebRequestAndGetComplete -accessToken $this.accessToken [WebRequestMethod]::Get , $uri -verbose $this.verbose;
-
-		return $result;
 	}
 
 	[Uri] CreateUri (
@@ -1271,10 +1335,44 @@ class EnvironmentManager
 		return $builder.Uri;
 	}
 
+	[Boolean] AsyncOperation_Await (
+		[Guid] $asyncOperationId
+	)
+	{
+		# create web request uri
+		$uri = $this.CreateUri("asyncoperations($($asyncOperationId))", '$select=statecode,statuscode');
+
+		$complete = $false;
+		$responseContent = $null;
+
+		while (-not $complete)
+		{
+			# invoke web request
+			$response = $this.client.InvokeWebRequest([WebRequestMethod]::Get, $uri);
+
+			# convert response content
+			$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
+
+			if ($responseContent.statecode -eq 3)
+			{
+				$complete = $true;
+			}
+			else
+			{
+				Start-Sleep -Seconds 5;
+			}
+		}
+
+		# if status code == 30, then all good.
+		$result = $responseContent.statuscode -eq 30;
+
+		return $result;
+	}
+
 	[Guid] BusinessUnit_GetRootId ()
 	{
 		# create web request uri
-		$uri = $this.CreateUri('businessunits', '%24select=businessunitid&%24filter=_parentbusinessunitid_value%20eq%20null');
+		$uri = $this.CreateUri('businessunits', '$select=businessunitid&$filter=_parentbusinessunitid_value eq null');
 
 		# invoke web request
 		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Get, $uri);
@@ -1289,10 +1387,10 @@ class EnvironmentManager
 	}
 
 	[Guid] ManagedIdentity_CreateIfNotExist (
-		[Guid] $managedIdentityId,
-		[Guid] $applicationId,
+		[Guid]   $managedIdentityId,
+		[Guid]   $applicationId,
 		[String] $name,
-		[Guid] $tenantId
+		[Guid]   $tenantId
 	)
 	{
 		# check if managed identity exist
@@ -1413,8 +1511,8 @@ class EnvironmentManager
 
 	[Void] Solution_Export (
 		[Boolean] $managed,
-		[String] $name,
-		[String] $outputFile
+		[String]  $name,
+		[String]  $outputFile
 	)
 	{
 		# create web request uri
@@ -1439,23 +1537,14 @@ class EnvironmentManager
 		[File]::WriteAllBytes($outputFile, $fileAsByteArray);
 	}
 
-	[void] Solution_Import (
-		[String]                     $customizationFile,
+	[Guid] Solution_ImportAsync (
 		[Dictionary[String, String]] $environmentVariables,
 		[Nullable[Boolean]]          $holdingSolution,
-		[Guid]                       $importJobId,
 		[Boolean]                    $overwriteUnmanagedCustomizations,
 		[Boolean]                    $publishWorkflows,
-		[Nullable[Boolean]]          $skipProductUpdateDependencies,
-		[Nullable[Boolean]]          $stageAndUpgrade
+		[Guid]                       $stageSolutionUploadId
 	)
 	{
-		# read file as byte array
-		$customizationFileAsByteArray = [File]::ReadAllBytes($customizationFile);
-
-		# convert file from byte array to base64 string
-		$customizationFileAsString = [Convert]::ToBase64String($customizationFileAsByteArray);
-
 		$componentParameters = $null;
 
 		if (($null -ne $environmentVariables) -and ($environmentVariables.Count -ge 0))
@@ -1473,7 +1562,7 @@ class EnvironmentManager
 		}
 
 		# create web request uri
-		$uri = $this.CreateUri('ImportSolution', $null);
+		$uri = $this.CreateUri('ImportSolutionAsync', $null);
 
 		# must set to null otherwise 500 Internal Error
 		if (0 -eq $componentParameters.Length)
@@ -1484,20 +1573,24 @@ class EnvironmentManager
 		# create web request body
 		$body = @{
 			ComponentParameters              = $componentParameters
-			CustomizationFile                = $customizationFileAsString
 			HoldingSolution                  = $holdingSolution
 			OverwriteUnmanagedCustomizations = $overwriteUnmanagedCustomizations
 			PublishWorkflows                 = $publishWorkflows
-			SkipProductUpdateDependencies    = $skipProductUpdateDependencies
-			StageAndUpgrade                  = $stageAndUpgrade
-			ImportJobId                      = $importJobId
+			SolutionParameters               = @{
+				StageSolutionUploadId = $stageSolutionUploadId
+			}
 		};
 
 		# invoke web request
-		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
+
+		# convert response content
+		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
+
+		return [Guid] $responseContent.AsyncOperationId;
 	}
 
-	up[void] Solution_Stage (
+	[SolutionStageInfo] Solution_Stage (
 		[String] $customizationFile
 	)
 	{
@@ -1512,7 +1605,7 @@ class EnvironmentManager
 
 		# create web request body
 		$body = @{
-			CustomizationFile                = $customizationFileAsString
+			CustomizationFile = $customizationFileAsString
 		};
 
 		# invoke web request
@@ -1521,11 +1614,23 @@ class EnvironmentManager
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
 
+		$stageSolutionResults = $responseContent.StageSolutionResults;
+
 		# create result from response
-		$result = $responseContent.SolutionId;
+		$result = [SolutionStageInfo] @{
+			success         = ($stageSolutionResults.StageSolutionStatus -eq 'Passed')
+			uploadId        = [Guid] $stageSolutionResults.StageSolutionUploadId
+			versionCurrent  = $stageSolutionResults.SolutionDetails.SolutionVersion
+			versionPrevious = $stageSolutionResults.SolutionDetails.PreviousSolutionVersion
+		};
+
+		return $result;
 	}
 
-	[Guid] Solution_StageAndUpgrade ([String] $customizationFile, [Dictionary[String, String]] $environmentVariables, [Boolean] $overwriteUnmanagedCustomizations, [Boolean] $publishWorkflows)
+	[Guid] Solution_StageAndUpgrade (
+		[String] $customizationFile,
+		[Dictionary[String, String]] $environmentVariables,
+		[Boolean] $overwriteUnmanagedCustomizations, [Boolean] $publishWorkflows)
 	{
 		# create import job id
 		$importJobId = [Guid]::NewGuid();
@@ -1579,7 +1684,31 @@ class EnvironmentManager
 		return $result;
 	}
 
-	[Void] SystemUser_AssociateRole ([Guid] $systemUserId, [Guid] $roleId)
+	[Guid] Solution_UninstallAsync (
+		[String] $solutionUniqueName
+	)
+	{
+		# create web request uri
+		$uri = $this.CreateUri('UninstallSolutionAsync', $null);
+
+		# create web request body
+		$body = @{
+			SolutionUniqueName = $solutionUniqueName
+		};
+
+		# invoke web request
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
+
+		# convert response content
+		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
+
+		return [Guid] $responseContent.AsyncOperationId;
+	}
+
+	[Void] SystemUser_AssociateRole (
+		[Guid] $systemUserId,
+		[Guid] $roleId
+	)
 	{
 		# create web request uri
 		$uri = $this.CreateUri("systemusers($($systemUserId))%2Fsystemuserroles_association%2F%24ref", $null);
@@ -1593,7 +1722,12 @@ class EnvironmentManager
 		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
 	}
 
-	[Guid] SystemUser_CreateIfNotExist ([Guid] $systemUserId, [Guid] $applicationId, [Guid] $businessUnitId, [String] $name)
+	[Guid] SystemUser_CreateIfNotExist (
+		[Guid]   $systemUserId,
+		[Guid]   $applicationId,
+		[Guid]   $businessUnitId,
+		[String] $name
+	)
 	{
 		# check if system user exist
 		$exist = $this.SystemUser_Exist($systemUserId);
@@ -1628,7 +1762,9 @@ class EnvironmentManager
 		return $result;
 	}
 
-	[Boolean] SystemUser_DisableAndDeleteIfExist([Guid] $systemUserId)
+	[Boolean] SystemUser_DisableAndDeleteIfExist (
+		[Guid] $systemUserId
+	)
 	{
 		# check if system user exist
 		$exist = $this.SystemUser_Exist($systemUserId);
@@ -1657,7 +1793,9 @@ class EnvironmentManager
 		return $true;
 	}
 
-	[Boolean] SystemUser_Exist ([Guid] $systemUserId)
+	[Boolean] SystemUser_Exist (
+		[Guid] $systemUserId
+	)
 	{
 		# create web request uri
 		$uri = $this.CreateUri('systemusers', "`$select=systemuserid&`$filter=systemuserid eq '$($systemUserId)'");
@@ -1676,7 +1814,9 @@ class EnvironmentManager
 		return $false;
 	}
 
-	[Guid] SystemUser_GetIdByEntraObjectId([Guid] $objectId)
+	[Guid] SystemUser_GetIdByEntraObjectId (
+		[Guid] $objectId
+	)
 	{
 		# create web request uri
 		$uri = $this.CreateUri('systemusers', "`$select=systemuserid&`$filter=azureactivedirectoryobjectid eq '$($objectId)'");
@@ -1700,15 +1840,15 @@ class EnvironmentManager
 
 class SolutionStageInfo
 {
-	# The current version of the solution.
-	[String] $solutionVersionCurrent;
-
-	# The previous version of the solution.
-	[String] $solutionVersionPrevious;
-
 	# Status of the stage operation.
 	[Boolean] $success;
 
 	# The upload unique identifier (ID) for the staged solution.
 	[Guid] $uploadId;
+
+	# The current version of the solution.
+	[String] $versionCurrent;
+
+	# The previous version of the solution.
+	[String] $versionPrevious;
 }
