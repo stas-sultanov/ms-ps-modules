@@ -14,7 +14,7 @@ function Admin.AddUser
 {
 	<#
 	.SYNOPSIS
-		Add an Entra User to the environment.
+		Add an Entra User to the Environment.
 	.DESCRIPTION
 		Can be executed by an Identity that has Power Platform Administrator role within Entra.
 	.PARAMETER accessToken
@@ -276,7 +276,7 @@ function AsyncOperation.Await
 		Url of the Power Platform Environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
 	.OUTPUTS
-		Business Unit Id.
+		True if operation completed sucessfully, False otherwise.
 	.NOTES
 		Copyright © 2024 Stas Sultanov.
 	#>
@@ -547,51 +547,6 @@ function Role.GetIdByName
 <# Functions to work with Solution #>
 <# ############################### #>
 
-function Solution.Export
-{
-	<#
-	.SYNOPSIS
-		Export a Solution.
-	.DESCRIPTION
-		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/exportsolutionresponse
-	.PARAMETER accessToken
-		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER environmentUrl
-		Url of the Power Platform Environment.
-		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER managed
-		True if solution should be exported as managed, False otherwise.
-	.PARAMETER name
-		Name of the solution to export.
-	.PARAMETER outputFile
-		File to write output.
-	.NOTES
-		Copyright © 2024 Stas Sultanov.
-	#>
-
-	[CmdletBinding()]
-	[OutputType([Void])]
-	param
-	(
-		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
-		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
-		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Boolean]      $managed,
-		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [String]       $name,
-		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [String]       $outputFile
-	)
-	process
-	{
-		# get verbose parameter value
-		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
-
-		# create environment manager
-		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
-
-		# execute
-		$manager.Solution_Export($managed, $name, $outputFile);
-	}
-}
-
 function Solution.ImportAsync
 {
 	<#
@@ -606,12 +561,14 @@ function Solution.ImportAsync
 		Dictionary of environment variables to overwrite values from the solution.
 	.PARAMETER holdingSolution
 		Import solution as holding solution staged for upgrade.
+	.PARAMETER importJobId
+		The ID of the import job that will be created to perform the import.
 	.PARAMETER overwriteUnmanagedCustomizations
 		Indicates whether any unmanaged customizations that have been applied over existing managed solution components should be overwritten.
 	.PARAMETER publishWorkflows
 		Indicates whether any processes (workflows) included in the solution should be activated after they are imported.
 	.PARAMETER stageSolutionUploadId
-		The unique identifier (ID) of the solution uploaded during the StageSolution call.
+		The unique identifier (ID) of the solution uploaded during the Stage call.
 	.OUTPUTS
 		The unique identifier (ID) of the asynchronous operation for the solution import.
 	.NOTES
@@ -626,6 +583,7 @@ function Solution.ImportAsync
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]                        $environmentUrl,
 		[Parameter(Mandatory = $false)]                            [Dictionary[String, String]] $environmentVariables = $null,
 		[Parameter(Mandatory = $false)]                            [Nullable[Boolean]]          $holdingSolution = $null,
+		[Parameter(Mandatory = $true)]                             [Guid]                       $importJobId,
 		[Parameter(Mandatory = $true)]                             [Boolean]                    $overwriteUnmanagedCustomizations,
 		[Parameter(Mandatory = $true)]                             [Boolean]                    $publishWorkflows,
 		[Parameter(Mandatory = $true)]                             [Guid]                       $stageSolutionUploadId
@@ -639,7 +597,7 @@ function Solution.ImportAsync
 		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
 
 		# execute
-		$result = $manager.Solution_ImportAsync($environmentVariables, $holdingSolution, $overwriteUnmanagedCustomizations, $publishWorkflows, $stageSolutionUploadId);
+		$result = $manager.Solution_ImportAsync($environmentVariables, $holdingSolution, $importJobId, $overwriteUnmanagedCustomizations, $publishWorkflows, $stageSolutionUploadId);
 
 		return $result;
 	}
@@ -667,9 +625,9 @@ function Solution.Stage
 	[OutputType([SolutionStageInfo])]
 	param
 	(
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString]               $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]                     $customizationFile,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]                        $environmentUrl
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [String]       $customizationFile,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl
 	)
 	process
 	{
@@ -686,15 +644,13 @@ function Solution.Stage
 	}
 }
 
-function Solution.StageAndUpgrade
+function Solution.StageAndUpgradeAsync
 {
 	<#
 	.SYNOPSIS
 		Import a solution, stage it for upgrade, and apply the upgrade as the default (when applicable).
 	.PARAMETER accessToken
 		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
-	.PARAMETER customizationFile
-		Path to Zipped solution file to import.
 	.PARAMETER environmentUrl
 		Url of the Power Platform Environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
@@ -708,6 +664,8 @@ function Solution.StageAndUpgrade
 		Indicates whether any processes (workflows) included in the solution should be activated after they are imported.
 	.PARAMETER skipProductUpdateDependencies
 		Indicates whether enforcement of dependencies related to product updates should be skipped.
+	.PARAMETER stageSolutionUploadId
+		The unique identifier (ID) of the solution uploaded during the Stage call.
 	.OUTPUTS
 		The unique identifier of the staged solution.
 	.NOTES
@@ -719,13 +677,13 @@ function Solution.StageAndUpgrade
 	param
 	(
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString]               $accessToken,
-		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]                     $customizationFile,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]                        $environmentUrl,
 		[Parameter(Mandatory = $false)]                            [Dictionary[String, String]] $environmentVariables = $null,
 		[Parameter(Mandatory = $true)]                             [Guid]                       $importJobId,
 		[Parameter(Mandatory = $true)]                             [Boolean]                    $overwriteUnmanagedCustomizations,
 		[Parameter(Mandatory = $true)]                             [Boolean]                    $publishWorkflows,
-		[Parameter(Mandatory = $false)]                            [Nullable[Boolean]]          $skipProductUpdateDependencies
+		[Parameter(Mandatory = $false)]                            [Nullable[Boolean]]          $skipProductUpdateDependencies = $null,
+		[Parameter(Mandatory = $true)]                             [Guid]                       $stageSolutionUploadId
 	)
 	process
 	{
@@ -736,7 +694,7 @@ function Solution.StageAndUpgrade
 		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
 
 		# execute
-		$result = $manager.Solution_StageAndUpgrade($customizationFile, $environmentVariables, $overwriteUnmanagedCustomizations, $publishWorkflows);
+		$result = $manager.Solution_StageAndUpgradeAsync($environmentVariables, $importJobId, $overwriteUnmanagedCustomizations, $publishWorkflows, $skipProductUpdateDependencies, $stageSolutionUploadId);
 
 		return $result;
 	}
@@ -746,7 +704,7 @@ function Solution.UninstallAsync
 {
 	<#
 	.SYNOPSIS
-		Uninstalls a solution using an asynchronous job.
+		Uninstall a solution using an asynchronous job.
 	.PARAMETER accessToken
 		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
 	.PARAMETER environmentUrl
@@ -1509,37 +1467,10 @@ class EnvironmentManager
 		return $result;
 	}
 
-	[Void] Solution_Export (
-		[Boolean] $managed,
-		[String]  $name,
-		[String]  $outputFile
-	)
-	{
-		# create web request uri
-		$uri = $this.CreateUri('ExportSolution', $null);
-
-		# create web request body
-		$body = @{
-			Managed      = $managed
-			SolutionName = $name
-		};
-
-		# invoke web request
-		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
-
-		# convert response content
-		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
-
-		# convert file from base64 string to byte array
-		$fileAsByteArray = [Convert]::FromBase64String($responseContent.ExportSolutionFile);
-
-		# write byte array to file
-		[File]::WriteAllBytes($outputFile, $fileAsByteArray);
-	}
-
 	[Guid] Solution_ImportAsync (
 		[Dictionary[String, String]] $environmentVariables,
 		[Nullable[Boolean]]          $holdingSolution,
+		[Guid]                       $importJobId,
 		[Boolean]                    $overwriteUnmanagedCustomizations,
 		[Boolean]                    $publishWorkflows,
 		[Guid]                       $stageSolutionUploadId
@@ -1574,6 +1505,7 @@ class EnvironmentManager
 		$body = @{
 			ComponentParameters              = $componentParameters
 			HoldingSolution                  = $holdingSolution
+			ImportJobId                      = $importJobId
 			OverwriteUnmanagedCustomizations = $overwriteUnmanagedCustomizations
 			PublishWorkflows                 = $publishWorkflows
 			SolutionParameters               = @{
@@ -1627,33 +1559,30 @@ class EnvironmentManager
 		return $result;
 	}
 
-	[Guid] Solution_StageAndUpgrade (
-		[String] $customizationFile,
+	[Guid] Solution_StageAndUpgradeAsync (
 		[Dictionary[String, String]] $environmentVariables,
-		[Boolean] $overwriteUnmanagedCustomizations, [Boolean] $publishWorkflows)
+		[Guid]                       $importJobId,
+		[Boolean]                    $overwriteUnmanagedCustomizations,
+		[Boolean]                    $publishWorkflows,
+		[Nullable[Boolean]]          $skipProductUpdateDependencies,
+		[Guid]                       $stageSolutionUploadId
+	)
 	{
-		# create import job id
-		$importJobId = [Guid]::NewGuid();
-
-		# read file as byte array
-		$customizationFileAsByteArray = [File]::ReadAllBytes($customizationFile);
-
-		# convert file from byte array to base64 string
-		$customizationFileAsString = [Convert]::ToBase64String($customizationFileAsByteArray);
-
 		$componentParameters = @();
 
-		foreach ($pair in $environmentVariables.GetEnumerator())
+		if (($null -ne $environmentVariables) -and ($environmentVariables.Count -ge 0))
 		{
-			$componentParameters += @{
-				'@odata.type' = 'Microsoft.Dynamics.CRM.environmentvariablevalue'
-				schemaname    = $pair.Key
-				value         = $pair.Value
+			$componentParameters = @();
+
+			foreach ($pair in $environmentVariables.GetEnumerator())
+			{
+				$componentParameters += @{
+					'@odata.type' = 'Microsoft.Dynamics.CRM.environmentvariablevalue'
+					schemaname    = $pair.Key
+					value         = $pair.Value
+				}
 			}
 		}
-
-		# create web request uri
-		$uri = $this.CreateUri('StageAndUpgrade', $null);
 
 		# must set to null otherwise 500 Internal Error
 		if (0 -eq $componentParameters.Length)
@@ -1661,15 +1590,19 @@ class EnvironmentManager
 			$componentParameters = $null;
 		}
 
-		$importJobId = [Guid]::NewGuid();
+		# create web request uri
+		$uri = $this.CreateUri('StageAndUpgradeAsync', $null);
 
 		# create web request body
 		$body = @{
 			ComponentParameters              = $componentParameters
-			CustomizationFile                = $customizationFileAsString
+			ImportJobId                      = $importJobId
 			OverwriteUnmanagedCustomizations = $overwriteUnmanagedCustomizations
 			PublishWorkflows                 = $publishWorkflows
-			ImportJobId                      = $importJobId
+			SkipProductUpdateDependencies    = $skipProductUpdateDependencies
+			SolutionParameters               = @{
+				StageSolutionUploadId = $stageSolutionUploadId
+			}
 		};
 
 		# invoke web request
@@ -1678,10 +1611,7 @@ class EnvironmentManager
 		# convert response content
 		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
 
-		# create result from response
-		$result = $responseContent.SolutionId;
-
-		return $result;
+		return [Guid] $responseContent.AsyncOperationId;
 	}
 
 	[Guid] Solution_UninstallAsync (

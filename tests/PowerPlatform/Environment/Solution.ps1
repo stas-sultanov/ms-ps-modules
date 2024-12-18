@@ -12,8 +12,9 @@
 param
 (
 	[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]     $environmentUrl,
-	[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]  $solutionV1File = 'test_1.zip',
-	[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]  $solutionV2File = 'test_2.zip',
+	[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]  $solutionUniqueueName = 'SolutionManageTest',
+	[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]  $solutionV1File = 'Solution\SolutionManageTest_1_0_0_2_managed.zip',
+	[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]  $solutionV2File = 'Solution\SolutionManageTest_1_0_0_3_managed.zip',
 	[Parameter(Mandatory = $false)]                            [Boolean] $isVerbose = $false
 )
 
@@ -25,56 +26,59 @@ $invocationPath = Split-Path $script:MyInvocation.MyCommand.Path;
 
 Import-Module (Join-Path $invocationPath '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
 
+Write-Host 'Start.' -ForegroundColor Blue;
+
 <# prerequisite #>
 
 Write-Host 'Get access token to access the environment.' -ForegroundColor Yellow;
 
 $environmentAccessToken = (Get-AzAccessToken -ResourceUrl $environmentUrl -AsSecureString).Token;
 
-<# Test Solution Install #>
+<# Test Solution Import #>
 
-Write-Host 'Test Solution V1 Stage ' -ForegroundColor Yellow -NoNewline;
+Write-Host 'Test Solution Import Stage      ' -ForegroundColor Yellow -NoNewline;
 
-$solutionStageInfoV1 = PowerPlatform.Solution.Stage `
+$importStageInfo = PowerPlatform.Solution.Stage `
 	-accessToken $environmentAccessToken `
 	-customizationFile (Join-Path $invocationPath $solutionV1File) `
 	-environmentUrl $environmentUrl;
 
-if ($solutionStageInfoV1.success)
+if ($importStageInfo.success)
 {
-	Write-Host "Complete. version: $($solutionStageInfoV1.versionCurrent), uploadId: $($solutionStageInfoV1.uploadId)" -ForegroundColor Green;
+	Write-Host "Complete. version: $($importStageInfo.versionCurrent), uploadId: $($importStageInfo.uploadId)" -ForegroundColor Green;
 }
 else
 {
 	Write-Host 'Fail.' -ForegroundColor Red;
 }
 
-if ($solutionStageInfoV1.versionCurrent -eq $solutionStageInfoV1.versionPrevious)
+if ($importStageInfo.versionCurrent -eq $importStageInfo.versionPrevious)
 {
 	Write-Host 'Solution Already Imported. Abort.' -ForegroundColor Red;
 
 	return;
 }
 
-Write-Host 'Test Solution V1 Import Async ' -ForegroundColor Yellow -NoNewline;
+Write-Host 'Test Solution Import Async      ' -ForegroundColor Yellow -NoNewline;
 
-$importAsyncOperationIdV1 = PowerPlatform.Solution.ImportAsync `
+$importAsyncOperationId = PowerPlatform.Solution.ImportAsync `
 	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
+	-importJobId ([Guid]::NewGuid()) `
 	-overwriteUnmanagedCustomizations $false `
 	-publishWorkflows $false `
-	-stageSolutionUploadId $solutionStageInfoV1.uploadId;
+	-stageSolutionUploadId $importStageInfo.uploadId;
 
-Write-Host "Complete. asyncOperationId: $($importAsyncOperationIdV1)" -ForegroundColor Green;
+Write-Host "Complete. asyncOperationId: $($importAsyncOperationId)" -ForegroundColor Green;
 
-Write-Host 'Test Solution V1 Import Await ' -ForegroundColor Yellow -NoNewline;
+Write-Host 'Test Solution Import Await      ' -ForegroundColor Yellow -NoNewline;
 
-$importCompleteV1 = PowerPlatform.AsyncOperation.Await `
+$importResult = PowerPlatform.AsyncOperation.Await `
 	-accessToken $environmentAccessToken `
-	-asyncOperationId $importAsyncOperationIdV1 `
+	-asyncOperationId $importAsyncOperationId `
 	-environmentUrl $environmentUrl;
 
-if ($importCompleteV1)
+if ($importResult)
 {
 	Write-Host 'Complete.' -ForegroundColor Green;
 }
@@ -85,41 +89,42 @@ else
 
 <# Test Solution Upgrade #>
 
-Write-Host 'Test Solution V2 Stage ' -ForegroundColor Yellow -NoNewline;
+Write-Host 'Test Solution Upgrade Stage     ' -ForegroundColor Yellow -NoNewline;
 
-$solutionStageInfoV2 = PowerPlatform.Solution.Stage `
+$upgradeStageInfo = PowerPlatform.Solution.Stage `
 	-accessToken $environmentAccessToken `
 	-customizationFile (Join-Path $invocationPath $solutionV2File) `
 	-environmentUrl $environmentUrl;
 
-if ($solutionStageInfoV2.success)
+if ($upgradeStageInfo.success)
 {
-	Write-Host "Complete. version: $($solutionStageInfoV2.versionCurrent), uploadId: $($solutionStageInfoV2.uploadId)" -ForegroundColor Green;
+	Write-Host "Complete. version: $($upgradeStageInfo.versionCurrent), uploadId: $($upgradeStageInfo.uploadId)" -ForegroundColor Green;
 }
 else
 {
 	Write-Host 'Fail.' -ForegroundColor Red;
 }
 
-Write-Host 'Test Solution V2 Import Async ' -ForegroundColor Yellow -NoNewline;
+Write-Host 'Test Solution Upgrade Async     ' -ForegroundColor Yellow -NoNewline;
 
-$importAsyncOperationIdV2 = PowerPlatform.Solution.ImportAsync `
+$upgradeAsyncOperationId = PowerPlatform.Solution.StageAndUpgradeAsync `
 	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
+	-importJobId ([Guid]::NewGuid()) `
 	-overwriteUnmanagedCustomizations $false `
 	-publishWorkflows $false `
-	-stageSolutionUploadId $solutionStageInfoV2.uploadId;
+	-stageSolutionUploadId $upgradeStageInfo.uploadId;
 
-Write-Host "Complete. asyncOperationId: $($importAsyncOperationIdV2)" -ForegroundColor Green;
+Write-Host "Complete. asyncOperationId: $($upgradeAsyncOperationId)" -ForegroundColor Green;
 
-Write-Host 'Test Solution V2 Import Await ' -ForegroundColor Yellow -NoNewline;
+Write-Host 'Test Solution Upgrade Await     ' -ForegroundColor Yellow -NoNewline;
 
-$importCompleteV2 = PowerPlatform.AsyncOperation.Await `
+$upgradeResult = PowerPlatform.AsyncOperation.Await `
 	-accessToken $environmentAccessToken `
-	-asyncOperationId $importAsyncOperationIdV2 `
+	-asyncOperationId $upgradeAsyncOperationId `
 	-environmentUrl $environmentUrl;
 
-if ($importCompleteV2)
+if ($upgradeResult)
 {
 	Write-Host 'Complete.' -ForegroundColor Green;
 }
@@ -130,23 +135,23 @@ else
 
 <# Test Solution Delete #>
 
-Write-Host 'Test Solution Uninstall Async ' -ForegroundColor Yellow -NoNewline;
+Write-Host 'Test Solution Uninstall Async   ' -ForegroundColor Yellow -NoNewline;
 
 $uninstallAsyncOperationId = PowerPlatform.Solution.UninstallAsync `
 	-accessToken $environmentAccessToken `
 	-environmentUrl $environmentUrl `
-	-solutionUniqueName 'hesseses';
+	-solutionUniqueName $solutionUniqueueName;
 
 Write-Host "Complete. asyncOperationId: $($uninstallAsyncOperationId)" -ForegroundColor Green;
 
-Write-Host 'Test Solution Uninstall Await ' -ForegroundColor Yellow -NoNewline;
+Write-Host 'Test Solution Uninstall Await   ' -ForegroundColor Yellow -NoNewline;
 
-$uninstallOperationComplete = PowerPlatform.AsyncOperation.Await `
+$uninstallResult = PowerPlatform.AsyncOperation.Await `
 	-accessToken $environmentAccessToken `
 	-asyncOperationId $uninstallAsyncOperationId `
 	-environmentUrl $environmentUrl;
 
-if ($uninstallOperationComplete)
+if ($uninstallResult)
 {
 	Write-Host 'Complete.' -ForegroundColor Green;
 }
@@ -156,3 +161,5 @@ else
 }
 
 <# end #>
+
+Write-Host 'Complete.' -ForegroundColor Blue;

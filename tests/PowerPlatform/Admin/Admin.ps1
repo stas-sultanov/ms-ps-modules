@@ -87,7 +87,7 @@ process
 	{
 		$user = $parameters.users[$key];
 
-		Write-Host "Test Add User.                  " -NoNewline;
+		Write-Host 'Test Add User.                  ' -NoNewline;
 
 		# add user
 		PowerPlatform.Admin.AddUser `

@@ -14,27 +14,37 @@ The module is developed exclusively by Stas Sultanov and is distributed under th
 
 # Functions
 
-The following functions are implemented.
 
-| Name                               | Area               | Description
-| :---                               | :--                | :---
-| Admin.AddUser                      | Environments       | Add an Entra User to the environment.
-| Admin.Create                       | Environments       | Create an environment within the Power Platform tenant.
-| Admin.Delete                       | Environments       | Delete an environment from the Power Platform tenant.
-| Admin.Retrieve                     | Environments       | Retrieve an environment info.
-| Admin.RetrieveAll                  | Environments       | Retrieve information about all accessible environments.
-| Admin.Update                       | Environments       | Update an environment within the Power Platform tenant.
-| BusinessUnit.GetRootId             | Business Units     | Get Id of the root Business Unit within the Power Platform Environment.
-| ManagedIdentity.CreateIfNotExist   | Managed Identities | Create a Managed Identity within the Power Platform Environment.
-| ManagedIdentity.DeleteIfExist      | Managed Identities | Delete a Managed Identity from the Power Platform environment.
-| PluginAssembly.BindManagedIdentity | Plugin Assemblies  | Bind the Plugin Assembly with the Managed Identity.
-| Role.GetIdByName                   | Roles              | Get Id of the Role by Name.
-| Solution.Export                    | Solutions          | Export a Solution.
-| Solution.Import                    | Solutions          | Import a Solution.
-| SystemUser.AssociateRole           | System Users       | Associate roles to the System User.
-| SystemUser.CreateIfNotExist        | System Users       | Create a System User within the Power Platform Environment.
-| SystemUser.DisableAndDeleteIfExist | System Users       | Disable and delete a System User from the Power Platform environment.
-| SystemUser.GetIdByEntraObjectId    | System Users       | Get Id of the System User by Entra Object Id.
+The following functions are for Environment administration purposeses.
+
+| Name              | Description
+| :---              | :---
+| Admin.AddUser     | Add an Entra User to the Environment.
+| Admin.Create      | Create an environment within the Power Platform tenant.
+| Admin.Delete      | Delete an environment from the Power Platform tenant.
+| Admin.Retrieve    | Retrieve an environment info.
+| Admin.RetrieveAll | Retrieve information about all accessible environments.
+| Admin.Update      | Update an environment within the Power Platform tenant.
+
+
+The following functions are for Environment management purposeses.
+
+| Name                               | Description
+| :---                               | :---
+| AsyncOperation.Await               | Await completion of the Async Opertion.
+| BusinessUnit.GetRootId             | Get Id of the root Business Unit within the Power Platform Environment.
+| ManagedIdentity.CreateIfNotExist   | Create a Managed Identity within the Power Platform Environment.
+| ManagedIdentity.DeleteIfExist      | Delete a Managed Identity from the Power Platform environment.
+| PluginAssembly.BindManagedIdentity | Bind the Plugin Assembly with the Managed Identity.
+| Role.GetIdByName                   | Get Id of the Role by Name.
+| Solution.ImportAsync               | Import a solution using an asynchronous job.
+| Solution.Stage                     | Stage the solution for upgrade.
+| Solution.StageAndUpgradeAsync      | Import a solution, stage it for upgrade, and apply the upgrade as the default (when applicable).
+| Solution.UninstallAsync            | Uninstall a solution using an asynchronous job.
+| SystemUser.AssociateRole           | Associate roles to the System User.
+| SystemUser.CreateIfNotExist        | Create a System User within the Power Platform Environment.
+| SystemUser.DisableAndDeleteIfExist | Disable and delete a System User from the Power Platform environment.
+| SystemUser.GetIdByEntraObjectId    | Get Id of the System User by Entra Object Id.
 
 # Use
 
