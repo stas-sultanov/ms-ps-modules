@@ -560,6 +560,8 @@ function Solution.Import
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
 	.PARAMETER environmentVariables
 		Dictionary of environment variables to overwrite values from the solution.
+	.PARAMETER holdingSolution
+		Import solution as holding solution staged for upgrade.
 	.PARAMETER importJobId
 		The ID of the import job that will be created to perform the import.
 	.PARAMETER overwriteUnmanagedCustomizations
@@ -606,6 +608,47 @@ function Solution.Import
 	}
 }
 
+function Solution.Stage
+{
+	<#
+	.SYNOPSIS
+		Import a solution.
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER customizationFile
+		Path to Zipped solution file to import.
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.OUTPUTS
+		Unique identifier of the Import job.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	[OutputType([Guid])]
+	param
+	(
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString]               $accessToken,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]                     $customizationFile,
+		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]                        $environmentUrl
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create environment manager
+		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
+
+		# execute
+		$result = $manager.Stage($customizationFile);
+
+		return $result;
+	}
+}
+
 function Solution.StageAndUpgrade
 {
 	<#
@@ -620,10 +663,14 @@ function Solution.StageAndUpgrade
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
 	.PARAMETER environmentVariables
 		Dictionary of environment variables to overwrite values from the solution.
+	.PARAMETER importJobId
+		The ID of the import job that will be created to perform the import.
 	.PARAMETER overwriteUnmanagedCustomizations
 		Indicates whether any unmanaged customizations that have been applied over existing managed solution components should be overwritten.
 	.PARAMETER publishWorkflows
 		Indicates whether any processes (workflows) included in the solution should be activated after they are imported.
+	.PARAMETER skipProductUpdateDependencies
+		Indicates whether enforcement of dependencies related to product updates should be skipped.
 	.OUTPUTS
 		The unique identifier of the staged solution.
 	.NOTES
@@ -637,9 +684,11 @@ function Solution.StageAndUpgrade
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [SecureString]               $accessToken,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [String]                     $customizationFile,
 		[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]                        $environmentUrl,
-		[Parameter(Mandatory = $false)] [ValidateNotNull()]        [Dictionary[String, String]] $environmentVariables = [Dictionary[String, String]]::new(),
-		[Parameter(Mandatory = $false)]                            [Boolean]                    $overwriteUnmanagedCustomizations = $true,
-		[Parameter(Mandatory = $false)]                            [Boolean]                    $publishWorkflows = $true
+		[Parameter(Mandatory = $false)]                            [Dictionary[String, String]] $environmentVariables = $null,
+		[Parameter(Mandatory = $true)]                             [Guid]                       $importJobId,
+		[Parameter(Mandatory = $true)]                             [Boolean]                    $overwriteUnmanagedCustomizations,
+		[Parameter(Mandatory = $true)]                             [Boolean]                    $publishWorkflows,
+		[Parameter(Mandatory = $false)]                            [Nullable[Boolean]]          $skipProductUpdateDependencies
 	)
 	process
 	{
@@ -1448,6 +1497,34 @@ class EnvironmentManager
 		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
 	}
 
+	up[void] Solution_Stage (
+		[String] $customizationFile
+	)
+	{
+		# read file as byte array
+		$customizationFileAsByteArray = [File]::ReadAllBytes($customizationFile);
+
+		# convert file from byte array to base64 string
+		$customizationFileAsString = [Convert]::ToBase64String($customizationFileAsByteArray);
+
+		# create web request uri
+		$uri = $this.CreateUri('StageSolution', $null);
+
+		# create web request body
+		$body = @{
+			CustomizationFile                = $customizationFileAsString
+		};
+
+		# invoke web request
+		$response = $this.client.InvokeWebRequest([WebRequestMethod]::Post, $uri, $body);
+
+		# convert response content
+		$responseContent = $response.Content | ConvertFrom-Json -AsHashtable;
+
+		# create result from response
+		$result = $responseContent.SolutionId;
+	}
+
 	[Guid] Solution_StageAndUpgrade ([String] $customizationFile, [Dictionary[String, String]] $environmentVariables, [Boolean] $overwriteUnmanagedCustomizations, [Boolean] $publishWorkflows)
 	{
 		# create import job id
@@ -1619,4 +1696,19 @@ class EnvironmentManager
 
 		return $result;
 	}
+}
+
+class SolutionStageInfo
+{
+	# The current version of the solution.
+	[String] $solutionVersionCurrent;
+
+	# The previous version of the solution.
+	[String] $solutionVersionPrevious;
+
+	# Status of the stage operation.
+	[Boolean] $success;
+
+	# The upload unique identifier (ID) for the staged solution.
+	[Guid] $uploadId;
 }
