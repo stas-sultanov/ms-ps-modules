@@ -17,7 +17,7 @@ process
 	$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
 
 	# import PowerShell module: Helpers
-	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\Helpers.psm1') -NoClobber -Force;
+	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\.NET\ConsoleOperationLogger.psm1') -NoClobber -Force;
 
 	# improt PowerShell module: Power Platform
 	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
@@ -25,7 +25,7 @@ process
 	# disable annoying Az warnings
 	$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
 
-	$log = New-ConsoleLogHelper 24;
+	$log = New-ConsoleOperationLogger 24;
 
 	# PROCESS BEGIN
 

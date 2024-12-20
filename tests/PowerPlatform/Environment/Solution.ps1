@@ -23,7 +23,7 @@ process
 	$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
 
 	# import PowerShell module: Helpers
-	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\Helpers.psm1') -NoClobber -Force;
+	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\.NET\ConsoleOperationLogger.psm1') -NoClobber -Force;
 
 	# improt PowerShell module: Power Platform
 	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
@@ -31,7 +31,7 @@ process
 	# disable annoying Az warnings
 	$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
 
-	$log = New-ConsoleLogHelper 16;
+	$log = New-ConsoleOperationLogger 16;
 
 	$log.ProcessBegin();
 
@@ -43,7 +43,7 @@ process
 
 	$log.OperationEnd( ($null -ne $environmentAccessToken) -and (0 -lt $environmentAccessToken.Length) );
 
-	# STEP 01
+	# STEP
 
 	$log.OperationBegin('Import Stage');
 
@@ -54,7 +54,7 @@ process
 
 	$log.OperationEnd($importStageInfo.success, ($importStageInfo.success ? "version: $($importStageInfo.versionCurrent), uploadId: $($importStageInfo.uploadId)" : $null));
 
-	# STEP 02
+	# STEP
 
 	$log.OperationBegin('Import Check');
 
@@ -69,7 +69,7 @@ process
 		return;
 	}
 
-	# STEP 03
+	# STEP
 
 	$log.OperationBegin('Import Async');
 
@@ -83,7 +83,7 @@ process
 
 	$log.OperationEndSuccess("asyncOperationId: $($importAsyncOperationId)");
 
-	# STEP 04
+	# STEP
 
 	$log.OperationBegin('Import Await');
 
@@ -94,7 +94,7 @@ process
 
 	$log.OperationEnd($importAwaitResult);
 
-	# STEP 05
+	# STEP
 
 	$log.OperationBegin('Upgrade Stage');
 
@@ -105,7 +105,7 @@ process
 
 	$log.OperationEnd($upgradeStageInfo.success, $upgradeStageInfo.success ? "version: $($upgradeStageInfo.versionCurrent), uploadId: $($upgradeStageInfo.uploadId)" : $null);
 
-	# STEP 06
+	# STEP
 
 	$log.OperationBegin('Upgrade Async');
 
@@ -119,7 +119,7 @@ process
 
 	$log.OperationEndSuccess("asyncOperationId: $($upgradeAsyncOperationId)");
 
-	# STEP 07
+	# STEP
 
 	$log.OperationBegin('Upgrade Await');
 
@@ -130,7 +130,7 @@ process
 
 	$log.OperationEnd($upgradeAwaitResult);
 
-	# STEP 08
+	# STEP
 
 	$log.OperationBegin('Uninstall Async');
 
@@ -141,7 +141,7 @@ process
 
 	$log.OperationEndSuccess("asyncOperationId: $($uninstallAsyncOperationId)");
 
-	# STEP 09
+	# STEP
 
 	$log.OperationBegin('Uninstall Await');
 

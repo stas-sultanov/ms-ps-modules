@@ -1,39 +1,39 @@
 using namespace System;
 
-function New-ConsoleLogHelper
+function New-ConsoleOperationLogger
 {
 	<#
 	.SYNOPSIS
-		Create a new instance of ConsoleLogHelper class.
+		Create a new instance of ConsoleOperationLogger class.
 	.DESCRIPTION
 		Helps use console for loggin.
 	.PARAMETER padWidthOperation
 		Message column padding.
 	.OUTPUTS
-		Instance of ConsoleLogHelper class.
+		Instance of ConsoleOperationLogger class.
 	.NOTES
 		Copyright © 2024 Stas Sultanov.
 	#>
-	[OutputType([ConsoleLogHelper])]
+	[OutputType([ConsoleOperationLogger])]
 	param
 	(
 		[Parameter(Mandatory = $true)] [Int32] $padWidthOperation
 	)
 	process
 	{
-		$result = [ConsoleLogHelper]::new($padWidthOperation);
+		$result = [ConsoleOperationLogger]::new($padWidthOperation);
 
 		return $result;
 	}
 }
 
-Export-ModuleMember -Function New-ConsoleLogHelper;
+Export-ModuleMember -Function New-ConsoleOperationLogger;
 
-class ConsoleLogHelper
+class ConsoleOperationLogger
 {
 	[ConsoleColor] $colorTabelBorder = [ConsoleColor]::Blue;
-	[ConsoleColor] $colorTabelColumnName = [ConsoleColor]::Gray;
-	[ConsoleColor] $colorDetails = [ConsoleColor]::Yellow;
+	[ConsoleColor] $colorTabelColumnName = [ConsoleColor]::Yellow;
+	[ConsoleColor] $colorDetails = [ConsoleColor]::Cyan;
 	[ConsoleColor] $colorId = [ConsoleColor]::Magenta;
 	[ConsoleColor] $colorOperation = [ConsoleColor]::White;
 	[ConsoleColor] $colorStatusFail = [ConsoleColor]::Red;
@@ -60,7 +60,7 @@ class ConsoleLogHelper
 	hidden [String] $tableFillStatus;
 	hidden [String] $tableFillTime;
 
-	ConsoleLogHelper (
+	ConsoleOperationLogger (
 		[Int32] $padWidthOperation
 	)
 	{
