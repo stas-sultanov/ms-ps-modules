@@ -13,31 +13,45 @@ param
 )
 process
 {
+	# get current script directory
+	$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
+
+	# import PowerShell module: Helpers
+	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\.NET\ConsoleOperationLogger.psm1') -NoClobber -Force;
+
+	# improt PowerShell module: Power Platform
+	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
+
 	# disable annoying Az warnings
 	$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
 
-	# get current script location
-	$invocationPath = Split-Path $script:MyInvocation.MyCommand.Path;
+	$log = New-ConsoleOperationLogger 24;
 
-	Import-Module (Join-Path $invocationPath '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
+	# PROCESS BEGIN
 
-	$parametersFile = Join-Path $invocationPath $parametersFile;
+	$log.ProcessBegin();
 
-	Write-Host 'Start.' -ForegroundColor Blue;
+	# STEP
 
-	<# prerequisite #>
-
-	Write-Host 'Get access token to access the Power Platform Tenant.' -ForegroundColor Yellow;
+	$log.OperationBegin('Get Tenant Access Token');
 
 	$tenantAccessToken = (Get-AzAccessToken -ResourceUrl 'https://service.powerapps.com/' -AsSecureString).Token;
 
-	Write-Host 'Load environment parameters.' -ForegroundColor Yellow;
+	$log.OperationEnd( ($null -ne $tenantAccessToken) -and (0 -lt $tenantAccessToken.Length) );
+
+	# STEP
+
+	$log.OperationBegin('Read Environment params');
+
+	$parametersFile = Join-Path $invocationDirectory $parametersFile;
 
 	$parameters = Get-Content $parametersFile | Out-String | ConvertFrom-Json -AsHashtable;
 
-	<# test create #>
+	$log.OperationEndSuccess();
 
-	Write-Host 'Test Create Environment.        ' -NoNewline;
+	# STEP
+
+	$log.OperationBegin('Create Environment');
 
 	$environmentName = PowerPlatform.Admin.Create `
 		-accessToken $tenantAccessToken `
@@ -45,9 +59,11 @@ process
 		-ErrorAction:Stop `
 		-Verbose:$isVerbose;
 
-	Write-Host "Complete. name: $($environmentName)" -ForegroundColor Green;
+	$log.OperationEndSuccess("name: $($environmentName)");
 
-	Write-Host 'Test Retrieve Environment.      ' -NoNewline;
+	# STEP
+
+	$log.OperationBegin('Retrieve Environment');
 
 	$environmentInfo = PowerPlatform.Admin.Retrieve `
 		-accessToken $tenantAccessToken `
@@ -55,53 +71,11 @@ process
 		-ErrorAction:Stop `
 		-Verbose:$isVerbose;
 
-	Write-Host "Complete. url: $($environmentInfo.url)" -ForegroundColor Green;
+	$log.OperationEndSuccess("url: $($environmentInfo.url)");
 
-	<# test retrieve #>
+	# STEP
 
-	Write-Host 'Test Retrieve All Environments. ' -NoNewline;
-
-	$environmentInfoList = PowerPlatform.Admin.RetrieveAll `
-		-accessToken $tenantAccessToken `
-		-ErrorAction:Stop `
-		-Verbose:$isVerbose;
-
-	Write-Host "Complete. count: $($environmentInfoList.Count)" -ForegroundColor Green;
-
-	Write-Host 'Test Filter Environments.       ' -NoNewline;
-
-	$filterResultEnvironmentName = $environmentInfoList | Where-Object { $_.domainName -eq $environmentInfo.domainName } | Select-Object -ExpandProperty name;
-
-	if ($null -ne $filterResultEnvironmentName)
-	{
-		Write-Host "Complete. name: $($filterResultEnvironmentName)" -ForegroundColor Green;
-	}
-	else
-	{
-		Write-Host 'Fail.' -ForegroundColor Red;
-	}
-
-	<# test add user #>
-
-	foreach ($key in $parameters.users.Keys)
-	{
-		$user = $parameters.users[$key];
-
-		Write-Host 'Test Add User.                  ' -NoNewline;
-
-		# add user
-		PowerPlatform.Admin.AddUser `
-			-accessToken $tenantAccessToken `
-			-environmentName $environmentInfo.name `
-			-userObjectId $user.objectId `
-			-ErrorAction:Stop;
-
-		Write-Host "Complete. key: $($key), objectId: $($user.objectId)" -ForegroundColor Green;
-	};
-
-	<# test update #>
-
-	Write-Host 'Test Update Environment.        ' -NoNewline;
+	$log.OperationBegin('Update Environment');
 
 	$updateProperties = @{
 		linkedEnvironmentMetadata = @{
@@ -121,27 +95,57 @@ process
 		-ErrorAction:Stop `
 		-Verbose:$isVerbose;
 
-	Write-Host "Complete. url: $($environmentInfo.url)" -ForegroundColor Green;
+	$log.OperationEndSuccess("url: $($environmentInfo.url)");
 
-	<# test delete #>
+	# STEP
 
-	Write-Host 'Test Delete Environment.        ' -NoNewline;
+	$log.OperationBegin('Retrieve Environments');
+
+	$environmentInfoList = PowerPlatform.Admin.RetrieveAll `
+		-accessToken $tenantAccessToken `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
+
+	$log.OperationEndSuccess("count: $($environmentInfoList.Count)");
+
+	# STEP
+
+	$log.OperationBegin('Filter Environments');
+
+	$filterResultEnvironmentName = $environmentInfoList | Where-Object { $_.domainName -eq $environmentInfo.domainName } | Select-Object -ExpandProperty name;
+
+	$log.OperationEnd($null -ne $filterResultEnvironmentName, $null -ne $filterResultEnvironmentName ? "name: $($filterResultEnvironmentName)" : $null);
+
+	# STEP
+
+	foreach ($key in $parameters.users.Keys)
+	{
+		$user = $parameters.users[$key];
+	
+		$log.OperationBegin('Add User to Environment');
+	
+		# add user
+		PowerPlatform.Admin.AddUser `
+			-accessToken $tenantAccessToken `
+			-environmentName $environmentInfo.name `
+			-userObjectId $user.objectId `
+			-ErrorAction:Stop;
+	
+		$log.OperationEndSuccess("key: $($key), objectId: $($user.objectId)");
+	};
+
+	# STEP
+
+	$log.OperationBegin('Delete Environment');
 
 	$deleteResult = PowerPlatform.Admin.Delete `
 		-accessToken $tenantAccessToken `
 		-environmentName $environmentInfo.name `
 		-ErrorAction:Stop;
 
-	if ($true -eq $deleteResult)
-	{
-		Write-Host 'Complete.' -ForegroundColor Green;
-	}
-	else
-	{
-		Write-Host 'Fail.' -ForegroundColor Red;
-	}
+	$log.OperationEnd($deleteResult);
 
-	<# end #>
+	# PROCESS END
 
-	Write-Host 'Complete.' -ForegroundColor Blue;
+	$log.ProcessEnd();
 }

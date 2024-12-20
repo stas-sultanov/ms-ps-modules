@@ -16,11 +16,11 @@ param
 Update-AzConfig -DisplayBreakingChangeWarning $false;
 
 # get current script location
-$invocationPath = Split-Path $script:MyInvocation.MyCommand.Path;
+$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
 
-Import-Module (Join-Path $invocationPath '..\..\sources\Azure\ResourceGroup.psm1') -NoClobber -Force;
+Import-Module (Join-Path $invocationDirectory '..\..\sources\Azure\ResourceGroup.psm1') -NoClobber -Force;
 
-$templateFile = Join-Path $invocationPath $templateFile;
+$templateFile = Join-Path $invocationDirectory $templateFile;
 
 $context = Get-AzContext;
 
