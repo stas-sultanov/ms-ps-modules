@@ -16,9 +16,9 @@ param
 Update-AzConfig -DisplayBreakingChangeWarning $false;
 
 # get current script location
-$invocationPath = Split-Path $script:MyInvocation.MyCommand.Path;
+$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
 
-Import-Module (Join-Path $invocationPath '..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
+Import-Module (Join-Path $invocationDirectory '..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
 
 $config0 = [Ordered]@{
 	a      = @(1, 10)
