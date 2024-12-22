@@ -19,6 +19,9 @@ param
 )
 process
 {
+	# disable annoying Az warnings
+	$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
+
 	# get current script directory
 	$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
 
@@ -28,14 +31,14 @@ process
 	# improt PowerShell module: Power Platform
 	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
 
-	# disable annoying Az warnings
-	$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
-
+	# create logger
 	$log = New-ConsoleOperationLogger 16;
+
+	<# PROCESS BEGIN #>
 
 	$log.ProcessBegin();
 
-	# PROCESS BEGIN
+	<# STEP #>
 
 	$log.OperationBegin('Get Access Token');
 
@@ -43,7 +46,7 @@ process
 
 	$log.OperationEnd( ($null -ne $environmentAccessToken) -and (0 -lt $environmentAccessToken.Length) );
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Import Stage');
 
@@ -54,7 +57,7 @@ process
 
 	$log.OperationEnd($importStageInfo.success, ($importStageInfo.success ? "version: $($importStageInfo.versionCurrent), uploadId: $($importStageInfo.uploadId)" : $null));
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Import Check');
 
@@ -69,7 +72,7 @@ process
 		return;
 	}
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Import Async');
 
@@ -83,7 +86,7 @@ process
 
 	$log.OperationEndSuccess("asyncOperationId: $($importAsyncOperationId)");
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Import Await');
 
@@ -94,7 +97,7 @@ process
 
 	$log.OperationEnd($importAwaitResult);
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Upgrade Stage');
 
@@ -105,7 +108,7 @@ process
 
 	$log.OperationEnd($upgradeStageInfo.success, $upgradeStageInfo.success ? "version: $($upgradeStageInfo.versionCurrent), uploadId: $($upgradeStageInfo.uploadId)" : $null);
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Upgrade Async');
 
@@ -119,7 +122,7 @@ process
 
 	$log.OperationEndSuccess("asyncOperationId: $($upgradeAsyncOperationId)");
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Upgrade Await');
 
@@ -130,7 +133,7 @@ process
 
 	$log.OperationEnd($upgradeAwaitResult);
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Uninstall Async');
 
@@ -141,7 +144,7 @@ process
 
 	$log.OperationEndSuccess("asyncOperationId: $($uninstallAsyncOperationId)");
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Uninstall Await');
 
@@ -152,7 +155,7 @@ process
 
 	$log.OperationEnd($uninstallAwaitResult);
 
-	# PROCESS END
+	<# PROCESS END #>
 
 	$log.ProcessEnd();
 }

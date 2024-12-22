@@ -11,33 +11,34 @@ param
 	[Parameter(Mandatory = $false)] [Boolean] $isVerbose = $false,
 	[Parameter(Mandatory = $false)] [String]  $templateFile = 'test.bicep'
 )
+process
+{
+	# disable annoying Az warnings
+	Update-AzConfig -DisplayBreakingChangeWarning $false;
 
-# disable annoying Az warnings
-Update-AzConfig -DisplayBreakingChangeWarning $false;
+	# get current script location
+	$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
 
-# get current script location
-$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
+	Import-Module (Join-Path $invocationDirectory '..\..\sources\Azure\ResourceGroup.psm1') -NoClobber -Force;
 
-Import-Module (Join-Path $invocationDirectory '..\..\sources\Azure\ResourceGroup.psm1') -NoClobber -Force;
+	$templateFile = Join-Path $invocationDirectory $templateFile;
 
-$templateFile = Join-Path $invocationDirectory $templateFile;
+	$context = Get-AzContext;
 
-$context = Get-AzContext;
+	$context.Tenant.Id
 
-$context.Tenant.Id
+	<# test provision #>
 
-<# test provision #>
+	Write-Host 'Execute script.';
+	$result = Azure.ResourceGroup.Provision `
+		-deploymentModeComplete $true `
+		-deploymentName 'PROVISION TEST' `
+		-location 'northeurope' `
+		-tenant $context.Tenant.Id `
+		-resourceGroupName 'TEST' `
+		-subscription $context.Subscription.Id `
+		-templateFile $testTemplateFile `
+		-templateParameters @{ testInput = 'supperinput' };
 
-Write-Host "Execute script.";
-$result = Azure.ResourceGroup.Provision `
-	-deploymentModeComplete $true `
-	-deploymentName 'PROVISION TEST' `
-	-location 'northeurope' `
-	-tenant $context.Tenant.Id `
-	-resourceGroupName 'TEST' `
-	-subscription $context.Subscription.Id `
-	-templateFile $testTemplateFile `
-	-templateParameters @{ testInput = 'supperinput' };
-
-$resultAsString = $result.resourceGroups.Value | ConvertTo-Json -Depth 100 | ConvertFrom-Json -AsHashtable;
-
+	$resultAsString = $result.resourceGroups.Value | ConvertTo-Json -Depth 100 | ConvertFrom-Json -AsHashtable;
+}

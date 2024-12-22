@@ -15,112 +15,147 @@ param
 	[Parameter(Mandatory = $true)]  [Guid]    $identityClientId,
 	[Parameter(Mandatory = $false)] [Boolean] $isVerbose = $false
 )
+process
+{
+	# disable annoying Az warnings
+	$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
 
-# disable annoying Az warnings
-$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
+	# get current script directory
+	$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
 
-# get current script location
-$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
+	# import PowerShell module: Helpers
+	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\.NET\ConsoleOperationLogger.psm1') -NoClobber -Force;
 
-Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
+	# improt PowerShell module: Power Platform
+	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
 
-<# prerequisite #>
+	# create logger
+	$log = New-ConsoleOperationLogger 30;
 
-Write-Host 'Get access token to access the environment.';
+	<# PROCESS BEGIN #>
 
-$environmentAccessToken = (Get-AzAccessToken -ResourceUrl $environmentUrl -AsSecureString).Token;
+	$log.ProcessBegin();
 
-Write-Host 'Get root Business Unit Id.';
+	<# STEP #>
 
-$rootBusinessUnitId = PowerPlatform.BusinessUnit.GetRootId `
-	-accessToken $environmentAccessToken `
-	-environmentUrl $environmentUrl `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	$log.OperationBegin('Get Access Token');
 
-Write-Host "Get root Business Unit Id Complete. id: $rootBusinessUnitId";
+	$environmentAccessToken = (Get-AzAccessToken -ResourceUrl $environmentUrl -AsSecureString).Token;
 
-Write-Host 'Get Basic User Role Id.';
+	$log.OperationEnd( ($null -ne $environmentAccessToken) -and (0 -lt $environmentAccessToken.Length) );
 
-$basicUserRoleId = PowerPlatform.Role.GetIdByName `
-	-accessToken $environmentAccessToken `
-	-environmentUrl $environmentUrl `
-	-roleName 'Basic User' `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	<# STEP #>
 
-Write-Host "Get Basic User Role Id Complete. id: $basicUserRoleId";
+	$log.OperationBegin('Get root Business Unit Id');
 
-<# test create if not exist #>
+	$rootBusinessUnitId = PowerPlatform.BusinessUnit.GetRootId `
+		-accessToken $environmentAccessToken `
+		-environmentUrl $environmentUrl `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
 
-Write-Host "Create System User. applicationId: $identityClientId";
+	$operationSuccess = $null -ne $rootBusinessUnitId;
 
-$systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
-	-accessToken $environmentAccessToken `
-	-applicationId $identityClientId `
-	-businessUnitId $rootBusinessUnitId `
-	-environmentUrl $environmentUrl `
-	-name 'Supper App' `
-	-systemUserId $identityClientId `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	$log.OperationEnd($operationSuccess, $operationSuccess ? "id: $($rootBusinessUnitId)" : $null);
 
-Write-Host "Create System User Complete. id: $systemUserId";
+	<# STEP #>
 
-<# test create if exist #>
+	$log.OperationBegin('Get Role Id Basic User');
 
-Write-Host "Create System User. applicationId: $identityClientId";
+	$basicUserRoleId = PowerPlatform.Role.GetIdByName `
+		-accessToken $environmentAccessToken `
+		-environmentUrl $environmentUrl `
+		-roleName 'Basic User' `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
 
-$systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
-	-accessToken $environmentAccessToken `
-	-applicationId $identityClientId `
-	-businessUnitId $rootBusinessUnitId `
-	-environmentUrl $environmentUrl `
-	-name 'Supper App' `
-	-systemUserId $identityClientId `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	$operationSuccess = $null -ne $basicUserRoleId;
 
-Write-Host "Create System User Complete. id: $systemUserId";
+	$log.OperationEnd($operationSuccess, $operationSuccess ? "id: $($basicUserRoleId)" : $null);
 
-<# test assign role #>
+	<# STEP : test create if not exist #>
 
-Write-Host 'Associate Role to System User.';
+	$log.OperationBegin('Create System User not exist');
 
-PowerPlatform.SystemUser.AssociateRole `
-	-accessToken $environmentAccessToken `
-	-environmentUrl $environmentUrl `
-	-systemUserId $systemUserId `
-	-roleId $basicUserRoleId `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	$systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
+		-accessToken $environmentAccessToken `
+		-applicationId $identityClientId `
+		-businessUnitId $rootBusinessUnitId `
+		-environmentUrl $environmentUrl `
+		-name 'Supper App' `
+		-systemUserId $identityClientId `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
 
-Write-Host 'Associate Role to System User Complete.';
+	$operationSuccess = $null -ne $systemUserId;
 
-<# test delete if exist #>
+	$log.OperationEnd($operationSuccess, $operationSuccess ? "id: $($systemUserId)" : $null);
 
-Write-Host "Delete System User. id: $systemUserId";
+	<# STEP : test create if exist #>
 
-$deleteResult = PowerPlatform.SystemUser.DisableAndDeleteIfExist `
-	-accessToken $environmentAccessToken `
-	-environmentUrl $environmentUrl `
-	-systemUserId $systemUserId `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	$log.OperationBegin('Create System User exist');
 
-Write-Host "Delete System User Complete. success: $deleteResult";
+	$systemUserId = PowerPlatform.SystemUser.CreateIfNotExist `
+		-accessToken $environmentAccessToken `
+		-applicationId $identityClientId `
+		-businessUnitId $rootBusinessUnitId `
+		-environmentUrl $environmentUrl `
+		-name 'Supper App' `
+		-systemUserId $identityClientId `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
 
-<# test delete if not exist #>
+	$operationSuccess = $null -ne $systemUserId;
 
-Write-Host "Delete System User. id: $systemUserId";
+	$log.OperationEnd($operationSuccess, $operationSuccess ? "id: $($systemUserId)" : $null);
 
-$deleteResult = PowerPlatform.SystemUser.DisableAndDeleteIfExist `
-	-accessToken $environmentAccessToken `
-	-environmentUrl $environmentUrl `
-	-systemUserId $systemUserId `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	<# STEP : test assign role #>
 
-Write-Host "Delete System User Complete. success: $deleteResult";
+	$log.OperationBegin('Associate Role to System User');
 
-<# end #>
+	PowerPlatform.SystemUser.AssociateRole `
+		-accessToken $environmentAccessToken `
+		-environmentUrl $environmentUrl `
+		-systemUserId $systemUserId `
+		-roleId $basicUserRoleId `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
+
+	$operationSuccess = $null -ne $systemUserId;
+
+	$log.OperationEnd($operationSuccess);
+
+	<# STEP : test delete if exist #>
+
+	$log.OperationBegin('Delete System User exist');
+
+	$deleteResult = PowerPlatform.SystemUser.DisableAndDeleteIfExist `
+		-accessToken $environmentAccessToken `
+		-environmentUrl $environmentUrl `
+		-systemUserId $systemUserId `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
+
+	$operationSuccess = $true -eq $deleteResult;
+
+	$log.OperationEnd($operationSuccess);
+
+	<# STEP : test delete if not exist #>
+
+	$log.OperationBegin('Delete System User not exist');
+
+	$deleteResult = PowerPlatform.SystemUser.DisableAndDeleteIfExist `
+		-accessToken $environmentAccessToken `
+		-environmentUrl $environmentUrl `
+		-systemUserId $systemUserId `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
+
+	$operationSuccess = $false -eq $deleteResult;
+
+	$log.OperationEnd($operationSuccess);
+
+	<# PROCESS END #>
+
+	$log.ProcessEnd();
+}

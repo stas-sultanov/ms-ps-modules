@@ -16,77 +16,102 @@ param
 	[Parameter(Mandatory = $true)]  [Guid]    $identityTenantId,
 	[Parameter(Mandatory = $false)] [Boolean] $isVerbose = $false
 )
+process
+{
+	# disable annoying Az warnings
+	$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
 
-# disable annoying Az warnings
-$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
+	# get current script directory
+	$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
 
-# get current script location
-$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
+	# import PowerShell module: Helpers
+	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\.NET\ConsoleOperationLogger.psm1') -NoClobber -Force;
 
-Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
+	# improt PowerShell module: Power Platform
+	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
 
-<# prerequisite #>
+	# create logger
+	$log = New-ConsoleOperationLogger 16;
 
-Write-Host 'Get access token to access the environment.';
+	<# PROCESS BEGIN #>
 
-$environmentAccessToken = (Get-AzAccessToken -ResourceUrl $environmentUrl -AsSecureString).Token;
+	$log.ProcessBegin();
 
-<# test create if not exist #>
+	<# STEP #>
 
-Write-Host "Create Managed Identity. applicationId: $identityClientId";
+	$log.OperationBegin('Get Access Token');
 
-$managedIdentityId = PowerPlatform.ManagedIdentity.CreateIfNotExist `
-	-accessToken $environmentAccessToken `
-	-applicationId $identityClientId `
-	-environmentUrl $environmentUrl `
-	-managedIdentityId $identityClientId `
-	-name 'Test' `
-	-tenantId $identityTenantId `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	$environmentAccessToken = (Get-AzAccessToken -ResourceUrl $environmentUrl -AsSecureString).Token;
 
-Write-Host "Create Managed Identity Complete. id: $managedIdentityId";
+	$log.OperationEnd( ($null -ne $environmentAccessToken) -and (0 -lt $environmentAccessToken.Length) );
 
-<# test create if exist #>
+	<# STEP : test create if not exist #>
 
-Write-Host "Create Managed Identity. applicationId: $identityClientId";
+	$log.OperationBegin('Create not exist');
 
-$managedIdentityId = PowerPlatform.ManagedIdentity.CreateIfNotExist `
-	-accessToken $environmentAccessToken `
-	-applicationId $identityClientId `
-	-environmentUrl $environmentUrl `
-	-managedIdentityId $identityClientId `
-	-name 'Test' `
-	-tenantId $identityTenantId `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	$managedIdentityId = PowerPlatform.ManagedIdentity.CreateIfNotExist `
+		-accessToken $environmentAccessToken `
+		-applicationId $identityClientId `
+		-environmentUrl $environmentUrl `
+		-managedIdentityId $identityClientId `
+		-name 'Test' `
+		-tenantId $identityTenantId `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
 
-Write-Host "Create Managed Identity Complete. id: $managedIdentityId";
+	$operationSuccess = $null -ne $managedIdentityId;
 
-<# test delete if exist #>
+	$log.OperationEnd($operationSuccess, $operationSuccess ? "id: $($managedIdentityId)" : $null);
 
-Write-Host "Delete Managed Identity. id: $managedIdentityId";
+	<# STEP : test create if exist #>
 
-$deleteResult = PowerPlatform.ManagedIdentity.DeleteIfExist `
-	-accessToken $environmentAccessToken `
-	-environmentUrl $environmentUrl `
-	-managedIdentityId $managedIdentityId `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	$log.OperationBegin('Create exist');
 
-Write-Host "Delete Managed Identity $deleteResult.";
+	$managedIdentityId = PowerPlatform.ManagedIdentity.CreateIfNotExist `
+		-accessToken $environmentAccessToken `
+		-applicationId $identityClientId `
+		-environmentUrl $environmentUrl `
+		-managedIdentityId $identityClientId `
+		-name 'Test' `
+		-tenantId $identityTenantId `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
 
-<# test delete if not exist #>
+	$operationSuccess = $null -ne $managedIdentityId;
 
-Write-Host "Delete Managed Identity. id: $managedIdentityId";
+	$log.OperationEnd($operationSuccess, $operationSuccess ? "id: $($managedIdentityId)" : $null);
 
-$deleteResult = PowerPlatform.ManagedIdentity.DeleteIfExist `
-	-accessToken $environmentAccessToken `
-	-environmentUrl $environmentUrl `
-	-managedIdentityId $managedIdentityId `
-	-ErrorAction:Stop `
-	-Verbose:$isVerbose;
+	<# STEP : test delete if exist #>
 
-Write-Host "Delete Managed Identity. success: $deleteResult";
+	$log.OperationBegin('Delete exist');
 
-<# end #>
+	$deleteResult = PowerPlatform.ManagedIdentity.DeleteIfExist `
+		-accessToken $environmentAccessToken `
+		-environmentUrl $environmentUrl `
+		-managedIdentityId $managedIdentityId `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
+
+	$operationSuccess = $true -eq $deleteResult;
+
+	$log.OperationEnd($operationSuccess);
+
+	<# STEP : test delete if not exist #>
+
+	$log.OperationBegin('Delete not exist');
+
+	$deleteResult = PowerPlatform.ManagedIdentity.DeleteIfExist `
+		-accessToken $environmentAccessToken `
+		-environmentUrl $environmentUrl `
+		-managedIdentityId $managedIdentityId `
+		-ErrorAction:Stop `
+		-Verbose:$isVerbose;
+
+	$operationSuccess = $false -eq $deleteResult;
+
+	$log.OperationEnd($operationSuccess);
+
+	<# PROCESS END #>
+
+	$log.ProcessEnd();
+}

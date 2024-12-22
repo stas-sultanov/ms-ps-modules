@@ -9,10 +9,13 @@
 param
 (
 	[Parameter(Mandatory = $false)] [Boolean] $isVerbose = $false,
-	[Parameter(Mandatory = $false)] [String]  $parametersFile = 'environment.json'
+	[Parameter(Mandatory = $false)] [String]  $parametersFile = 'testenv.params.json'
 )
 process
 {
+	# disable annoying Az warnings
+	$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
+
 	# get current script directory
 	$invocationDirectory = Split-Path $script:MyInvocation.MyCommand.Path;
 
@@ -22,16 +25,14 @@ process
 	# improt PowerShell module: Power Platform
 	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
 
-	# disable annoying Az warnings
-	$null = Update-AzConfig -DisplayBreakingChangeWarning $false;
-
+	# create logger
 	$log = New-ConsoleOperationLogger 24;
 
-	# PROCESS BEGIN
+	<# PROCESS BEGIN #>
 
 	$log.ProcessBegin();
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Get Tenant Access Token');
 
@@ -39,7 +40,7 @@ process
 
 	$log.OperationEnd( ($null -ne $tenantAccessToken) -and (0 -lt $tenantAccessToken.Length) );
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Read Environment params');
 
@@ -49,7 +50,7 @@ process
 
 	$log.OperationEndSuccess();
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Create Environment');
 
@@ -61,7 +62,7 @@ process
 
 	$log.OperationEndSuccess("name: $($environmentName)");
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Retrieve Environment');
 
@@ -73,7 +74,7 @@ process
 
 	$log.OperationEndSuccess("url: $($environmentInfo.url)");
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Update Environment');
 
@@ -97,7 +98,7 @@ process
 
 	$log.OperationEndSuccess("url: $($environmentInfo.url)");
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Retrieve Environments');
 
@@ -108,7 +109,7 @@ process
 
 	$log.OperationEndSuccess("count: $($environmentInfoList.Count)");
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Filter Environments');
 
@@ -116,7 +117,7 @@ process
 
 	$log.OperationEnd($null -ne $filterResultEnvironmentName, $null -ne $filterResultEnvironmentName ? "name: $($filterResultEnvironmentName)" : $null);
 
-	# STEP
+	<# STEP #>
 
 	foreach ($key in $parameters.users.Keys)
 	{
@@ -134,7 +135,7 @@ process
 		$log.OperationEndSuccess("key: $($key), objectId: $($user.objectId)");
 	};
 
-	# STEP
+	<# STEP #>
 
 	$log.OperationBegin('Delete Environment');
 
@@ -145,7 +146,7 @@ process
 
 	$log.OperationEnd($deleteResult);
 
-	# PROCESS END
+	<# PROCESS END #>
 
 	$log.ProcessEnd();
 }
