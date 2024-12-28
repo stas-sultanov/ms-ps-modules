@@ -6,7 +6,7 @@ function New-ConsoleOperationLogger
 	.SYNOPSIS
 		Create a new instance of ConsoleOperationLogger class.
 	.DESCRIPTION
-		Helps use console for loggin.
+		Helps use console for logs.
 	.PARAMETER padWidthOperation
 		Message column padding.
 	.OUTPUTS
@@ -31,8 +31,8 @@ Export-ModuleMember -Function New-ConsoleOperationLogger;
 
 class ConsoleOperationLogger
 {
-	[ConsoleColor] $colorTabelBorder = [ConsoleColor]::Blue;
-	[ConsoleColor] $colorTabelColumnName = [ConsoleColor]::Yellow;
+	[ConsoleColor] $colorTableBorder = [ConsoleColor]::Blue;
+	[ConsoleColor] $colorTableColumnName = [ConsoleColor]::Yellow;
 	[ConsoleColor] $colorDetails = [ConsoleColor]::Cyan;
 	[ConsoleColor] $colorId = [ConsoleColor]::Magenta;
 	[ConsoleColor] $colorOperation = [ConsoleColor]::White;
@@ -100,7 +100,7 @@ class ConsoleOperationLogger
 		# set begin time
 		$this.operationEndTime = [DateTime]::UtcNow;
 
-		# calculate opretaion time
+		# calculate operation time
 		$operationTime = [Int32] ($this.operationEndTime.Subtract($this.operationBeginTime).TotalMilliseconds);
 
 		# status
@@ -147,30 +147,30 @@ class ConsoleOperationLogger
 
 		$tableHeadTop = '┏' + $this.tableFillId + '┳' + $this.tableFillOperation + '┳' + $this.tableFillStatus + '┳' + $this.tableFillTime + '┳' + $this.tableFillDetails;
 
-		Write-Host $tableHeadTop -ForegroundColor $this.colorTabelBorder;
+		Write-Host $tableHeadTop -ForegroundColor $this.colorTableBorder;
 
-		# teble column names
+		# table column names
 		$this.WriteRowBegin(
 			$this.columnNameId.PadLeft($this.padWidthId),
-			$this.colorTabelColumnName,
+			$this.colorTableColumnName,
 			$this.columnNameOperation.PadRight($this.padWidthOperation),
 			$this.colorOperation
 		);
 
 		$this.WriteRowEnd(
 			$this.columnNameStatus.PadRight($this.padWidthStatus),
-			$this.colorTabelColumnName,
+			$this.colorTableColumnName,
 			$this.columnNameTime.PadRight($this.padWidthTime),
-			$this.colorTabelColumnName,
+			$this.colorTableColumnName,
 			$this.columnNameDetails,
-			$this.colorTabelColumnName
+			$this.colorTableColumnName
 		);
 
 		# table head bottom
 
 		$tableHeadBottom = '┣' + $this.tableFillId + '╋' + $this.tableFillOperation + '╋' + $this.tableFillStatus + '╋' + $this.tableFillTime + '╋' + $this.tableFillDetails;
 
-		Write-Host $tableHeadBottom -ForegroundColor $this.colorTabelBorder;
+		Write-Host $tableHeadBottom -ForegroundColor $this.colorTableBorder;
 	}
 
 	[Void] ProcessEnd(
@@ -178,7 +178,7 @@ class ConsoleOperationLogger
 	{
 		$tableFootBottom = '┗' + $this.tableFillId + '┻' + $this.tableFillOperation + '┻' + $this.tableFillStatus + '┻' + $this.tableFillTime + '┻' + $this.tableFillDetails;
 
-		Write-Host $tableFootBottom -ForegroundColor $this.colorTabelBorder;
+		Write-Host $tableFootBottom -ForegroundColor $this.colorTableBorder;
 	}
 
 	hidden [Void] WriteRowBegin(
@@ -188,15 +188,15 @@ class ConsoleOperationLogger
 		[ConsoleColor] $messageColor
 	)
 	{
-		Write-Host '┃ ' -ForegroundColor $this.colorTabelBorder -NoNewline;
+		Write-Host '┃ ' -ForegroundColor $this.colorTableBorder -NoNewline;
 
 		Write-Host $id -ForegroundColor $idColor -NoNewline;
 
-		Write-Host ' ┃ ' -ForegroundColor $this.colorTabelBorder -NoNewline;
+		Write-Host ' ┃ ' -ForegroundColor $this.colorTableBorder -NoNewline;
 
 		Write-Host $message -ForegroundColor $messageColor -NoNewline;
 
-		Write-Host ' ┃ ' -ForegroundColor $this.colorTabelBorder -NoNewline;
+		Write-Host ' ┃ ' -ForegroundColor $this.colorTableBorder -NoNewline;
 	}
 
 	[Void] WriteRowEnd(
@@ -210,11 +210,11 @@ class ConsoleOperationLogger
 	{
 		Write-Host $status -ForegroundColor $statusColor -NoNewline;
 
-		Write-Host ' ┃ ' -ForegroundColor $this.colorTabelBorder -NoNewline;
+		Write-Host ' ┃ ' -ForegroundColor $this.colorTableBorder -NoNewline;
 
 		Write-Host $duration -ForegroundColor $durationColor -NoNewline;
 
-		Write-Host ' ┃ ' -ForegroundColor $this.colorTabelBorder -NoNewline;
+		Write-Host ' ┃ ' -ForegroundColor $this.colorTableBorder -NoNewline;
 
 		Write-Host $details -ForegroundColor $detailsColor;
 	}

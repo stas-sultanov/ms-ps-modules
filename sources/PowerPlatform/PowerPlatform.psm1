@@ -267,7 +267,7 @@ function AsyncOperation.Await
 {
 	<#
 	.SYNOPSIS
-		Await completion of the Async Opertion.
+		Await completion of the Async Operation.
 	.DESCRIPTION
 		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/businessunit
 	.PARAMETER accessToken
@@ -276,7 +276,7 @@ function AsyncOperation.Await
 		Url of the Power Platform Environment.
 		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
 	.OUTPUTS
-		True if operation completed sucessfully, False otherwise.
+		True if operation completed successfully, False otherwise.
 	.NOTES
 		Copyright © 2024 Stas Sultanov.
 	#>
@@ -493,6 +493,52 @@ function PluginAssembly.BindManagedIdentity
 
 		# execute
 		$manager.PluginAssembly_BindManagedIdentity($pluginAssemblyId, $managedIdentityId);
+	}
+}
+
+<# ###################################### #>
+<# Functions to work with Plugin Packages #>
+<# ###################################### #>
+
+function PluginPackage.BindManagedIdentity
+{
+	<#
+	.SYNOPSIS
+		Bind the Plugin Package with the Managed Identity.
+	.DESCRIPTION
+		More information here: https://learn.microsoft.com/power-apps/developer/data-platform/webapi/reference/pluginassembly
+	.PARAMETER accessToken
+		Bearer token to access. The token AUD must include 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER environmentUrl
+		Url of the Power Platform Environment.
+		Format 'https://[DomainName].[DomainSuffix].dynamics.com/'.
+	.PARAMETER managedIdentityId
+		Id of the Managed Identity.
+	.PARAMETER pluginPackageId
+		Id of the Plugin Package.
+	.NOTES
+		Copyright © 2024 Stas Sultanov.
+	#>
+
+	[CmdletBinding()]
+	[OutputType([Void])]
+	param
+	(
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [SecureString] $accessToken,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Uri]          $environmentUrl,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $managedIdentityId,
+		[Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [Guid]         $pluginPackageId
+	)
+	process
+	{
+		# get verbose parameter value
+		$isVerbose = $PSBoundParameters.ContainsKey('Verbose') -and $PSBoundParameters['Verbose'];
+
+		# create environment manager
+		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
+
+		# execute
+		$manager.PluginPackage_BindManagedIdentity($pluginPackageId, $managedIdentityId);
 	}
 }
 
@@ -1443,6 +1489,23 @@ class EnvironmentManager
 		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Patch, $uri, $body);
 	}
 
+	[Void] PluginPackage_BindManagedIdentity (
+		[Guid] $pluginPackageId,
+		[Guid] $managedIdentityId
+	)
+	{
+		# create web request uri
+		$uri = $this.CreateUri("pluginpackages($($pluginPackageId))", $null);
+
+		# create web request body
+		$body = @{
+			'managedidentityid@odata.bind' = "/managedidentities($($managedIdentityId))";
+		};
+
+		# invoke web request
+		$null = $this.client.InvokeWebRequest([WebRequestMethod]::Patch, $uri, $body);
+	}
+
 	[Guid] Role_GetIdByName (
 		[String] $roleName
 	)
@@ -1641,7 +1704,7 @@ class EnvironmentManager
 	)
 	{
 		# create web request uri
-		$uri = $this.CreateUri("systemusers($($systemUserId))%2Fsystemuserroles_association%2F%24ref", $null);
+		$uri = $this.CreateUri("systemusers($($systemUserId))/systemuserroles_association/`$ref", $null);
 
 		# create web request body
 		$body = @{

@@ -12,7 +12,7 @@
 param
 (
 	[Parameter(Mandatory = $true)]  [ValidateNotNullOrEmpty()] [Uri]     $environmentUrl,
-	[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]  $solutionUniqueueName = 'SolutionManageTest',
+	[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]  $solutionUniqueName = 'SolutionManageTest',
 	[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]  $solutionV1File = 'Solution\SolutionManageTest_1_0_0_2_managed.zip',
 	[Parameter(Mandatory = $false)] [ValidateNotNullOrEmpty()] [String]  $solutionV2File = 'Solution\SolutionManageTest_1_0_0_3_managed.zip',
 	[Parameter(Mandatory = $false)]                            [Boolean] $isVerbose = $false
@@ -28,7 +28,7 @@ process
 	# import PowerShell module: Helpers
 	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\.NET\ConsoleOperationLogger.psm1') -NoClobber -Force;
 
-	# improt PowerShell module: Power Platform
+	# import PowerShell module: Power Platform
 	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
 
 	# create logger
@@ -140,7 +140,7 @@ process
 	$uninstallAsyncOperationId = PowerPlatform.Solution.UninstallAsync `
 		-accessToken $environmentAccessToken `
 		-environmentUrl $environmentUrl `
-		-solutionUniqueName $solutionUniqueueName;
+		-solutionUniqueName $solutionUniqueName;
 
 	$log.OperationEndSuccess("asyncOperationId: $($uninstallAsyncOperationId)");
 

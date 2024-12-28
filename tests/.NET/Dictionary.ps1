@@ -37,8 +37,8 @@ $config0 = [Ordered]@{
 $config1 = [Ordered]@{
 	global = [Ordered]@{
 		realm = [Ordered]@{
-			name     = 'blablla'
-			revision = 'belblee'
+			name     = 'testName'
+			revision = 'testRevision'
 		}
 	}
 	a      = @(10, 20)

@@ -38,7 +38,7 @@ process
 		-resourceGroupName 'TEST' `
 		-subscription $context.Subscription.Id `
 		-templateFile $testTemplateFile `
-		-templateParameters @{ testInput = 'supperinput' };
+		-templateParameters @{ testInput = 'supperInput' };
 
 	$resultAsString = $result.resourceGroups.Value | ConvertTo-Json -Depth 100 | ConvertFrom-Json -AsHashtable;
 }

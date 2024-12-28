@@ -64,7 +64,7 @@ function Azure.SqlServer.Database.ManageUserAccess
 		Bearer token to access an Azure SQL Server.
 	.PARAMETER action
 		An action to perform.
-		Restrict - the database can be access by the users with the one of the following role: db_owner, dbcreator.
+		Restrict - the database can be access by the users with the one of the following role: db_owner, db_creator.
 		Release - the database can be access by any valid user.
 	.PARAMETER databaseName
 		Azure Sql Database name within the Sql Server.

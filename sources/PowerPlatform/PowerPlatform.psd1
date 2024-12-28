@@ -52,6 +52,7 @@
 		'ManagedIdentity.CreateIfNotExist',
 		'ManagedIdentity.DeleteIfExist',
 		'PluginAssembly.BindManagedIdentity',
+		'PluginPackage.BindManagedIdentity',
 		'Role.GetIdByName',
 		'Solution.ImportAsync',
 		'Solution.Stage',

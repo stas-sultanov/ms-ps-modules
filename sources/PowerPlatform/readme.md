@@ -15,7 +15,7 @@ The module is developed exclusively by Stas Sultanov and is distributed under th
 # Functions
 
 
-The following functions are for Environment administration purposeses.
+The following functions are for Environment administration purposes.
 
 | Name              | Description
 | :---              | :---
@@ -27,11 +27,11 @@ The following functions are for Environment administration purposeses.
 | Admin.Update      | Update an environment within the Power Platform tenant.
 
 
-The following functions are for Environment management purposeses.
+The following functions are for Environment management purposes.
 
 | Name                               | Description
 | :---                               | :---
-| AsyncOperation.Await               | Await completion of the Async Opertion.
+| AsyncOperation.Await               | Await completion of the Async Operation.
 | BusinessUnit.GetRootId             | Get Id of the root Business Unit within the Power Platform Environment.
 | ManagedIdentity.CreateIfNotExist   | Create a Managed Identity within the Power Platform Environment.
 | ManagedIdentity.DeleteIfExist      | Delete a Managed Identity from the Power Platform environment.

@@ -27,7 +27,7 @@ process
 	# import PowerShell module: Helpers
 	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\.NET\ConsoleOperationLogger.psm1') -NoClobber -Force;
 
-	# improt PowerShell module: Power Platform
+	# import PowerShell module: Power Platform
 	Import-Module (Join-Path $invocationDirectory '..\..\..\sources\PowerPlatform\PowerPlatform.psd1') -NoClobber -Force;
 
 	# create logger

@@ -15,7 +15,7 @@
 			"currency": {
 				"code": "EUR"
 			},
-			"domainName": "psautotest",
+			"domainName": "automation",
 			"templates": []
 		},
 		"parentEnvironmentGroup": {
