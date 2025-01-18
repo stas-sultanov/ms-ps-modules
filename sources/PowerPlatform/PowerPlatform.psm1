@@ -399,7 +399,7 @@ function ManagedIdentity.CreateIfNotExist
 		$manager = [EnvironmentManager]::new($accessToken, $environmentUrl, $isVerbose);
 
 		# execute
-		$result = $manager.ManagedIdentity_CreateIfNotExist($managedIdentityId, $applicationId, $name, $tenantId);
+		$result = $manager.ManagedIdentity_CreateIfNotExist($applicationId, $managedIdentityId, $name, $tenantId);
 
 		return $result;
 	}
@@ -1391,8 +1391,8 @@ class EnvironmentManager
 	}
 
 	[Guid] ManagedIdentity_CreateIfNotExist (
-		[Guid]   $managedIdentityId,
 		[Guid]   $applicationId,
+		[Guid]   $managedIdentityId,
 		[String] $name,
 		[Guid]   $tenantId
 	)
